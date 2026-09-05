@@ -2183,8 +2183,8 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Live Payment QR Preview & Supported Apps -->
-                        <div class="lg:col-span-5 space-y-4">
+                        <!-- Right Column: Live Payment QR Preview (Desktop Only - Strictly Hidden on Mobile) -->
+                        <div class="hidden lg:block lg:col-span-5 space-y-4">
                             <div class="page p-5 sm:p-6 space-y-4 text-center">
                                 <div class="pb-2.5 rule-row text-left">
                                     <span class="text-[10px] font-num uppercase tracking-widest font-semibold" style="color: var(--ink-soft);">Live QR Preview</span>
@@ -3071,165 +3071,75 @@
 
                             <template x-if="data.upi_id">
                                 <div class="space-y-3">
-                                    <!-- 1. ACCOUNT HOLDER NOTICE & 1-CLICK DIRECT RECORD (Fixes Self-Payment NPCI Decline) -->
+                                    <!-- 1. ACCOUNT HOLDER NOTICE (When Current User is Month Leader) -->
                                     <div x-show="currentUser && data.leader && currentUser.toLowerCase() === data.leader.toLowerCase()"
-                                        class="p-3.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-950 space-y-2 shadow-xs">
-                                        <div class="flex items-center gap-2 font-bold text-xs text-emerald-900">
-                                            <span class="text-base">⚡</span>
-                                            <span>Account Holder (<span class="capitalize" x-text="currentUser"></span>) — Direct Deposit Notice</span>
+                                        class="p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-950 space-y-2 shadow-xs">
+                                        <div class="flex items-center gap-1.5 font-bold text-xs text-emerald-900">
+                                            <span class="text-sm">⚡</span>
+                                            <span>Account Holder (<span class="capitalize" x-text="currentUser"></span>) — Direct Record</span>
                                         </div>
                                         <p class="text-[11px] leading-relaxed text-emerald-800">
-                                            You are currently holding the room account funds for <strong x-text="data.month"></strong>. In UPI, banks <strong>strictly block self-transfers</strong> to your own UPI ID with <em>"Payment declined for security reasons"</em>. You do <strong>not</strong> need to transfer money to yourself. Simply click below to record your personal ₹<span class="font-num" x-text="Number(topUpAmount || 1000).toLocaleString()"></span> share directly into the passbook ledger!
+                                            You are holding the room account for <strong x-text="data.month"></strong>. You don't need to make a UPI self-transfer. Click below to record your share into the passbook ledger directly:
                                         </p>
                                         <button type="button" @click="submitTopUp()"
-                                            class="w-full py-2.5 px-3 rounded font-bold text-xs text-white bg-emerald-700 hover:bg-emerald-800 active:scale-98 shadow transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            class="w-full py-2 px-3 rounded font-bold text-xs text-white bg-emerald-700 hover:bg-emerald-800 active:scale-98 shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
-                                            <span>✓ Record My ₹<span class="font-num" x-text="Number(topUpAmount || 1000).toLocaleString()"></span> Deposit into Ledger (Direct)</span>
+                                            <span>✓ Record My ₹<span class="font-num" x-text="Number(topUpAmount || 1000).toLocaleString()"></span> Deposit into Ledger</span>
                                         </button>
                                     </div>
 
-                                    <!-- 2. MULTI-OPTION BULLETPROOF PAYMENT BOX -->
-                                    <div class="border rounded-lg p-3 bg-white space-y-3" style="border-color: var(--rule-soft);">
-                                        <div class="flex items-center justify-between border-b pb-2" style="border-color: var(--rule-soft);">
-                                            <span class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                                                <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                                </svg>
-                                                <span>Pay ₹<span class="font-num font-bold" x-text="Number(topUpAmount || 0).toLocaleString()"></span> to Room Fund:</span>
+                                    <!-- 2. INSTANT PAYMENT APP TILES (Amount Prefilled, 1-Tap Direct Launch) -->
+                                    <div class="p-3.5 rounded-lg border bg-white space-y-3 shadow-xs" style="border-color: var(--rule-soft);">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                                <span>Pay ₹<span class="font-num font-bold text-emerald-700" x-text="Number(topUpAmount || 0).toLocaleString()"></span> via UPI App:</span>
                                             </span>
-                                            <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                                🛡️ Zero Bank Declines
+                                            <span class="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                ✓ Amount Prefilled
                                             </span>
                                         </div>
 
-                                        <!-- Tab Selectors -->
-                                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded text-[11px] font-semibold text-slate-600">
-                                            <button type="button" @click="depositPayMethod = 'qr'"
-                                                :class="depositPayMethod === 'qr' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'"
-                                                class="py-1.5 px-2 rounded text-center transition-all cursor-pointer">
-                                                📷 Static QR
+                                        <!-- 4 Brand Tiles Grid -->
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                            <!-- Google Pay Button -->
+                                            <button type="button" @click="launchUpiApp('gpay')"
+                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
+                                                title="Pay with Google Pay" aria-label="Google Pay">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-6 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">Google Pay</span>
                                             </button>
-                                            <button type="button" @click="depositPayMethod = 'phone'"
-                                                :class="depositPayMethod === 'phone' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'"
-                                                class="py-1.5 px-2 rounded text-center transition-all cursor-pointer">
-                                                📱 Phone No.
+
+                                            <!-- PhonePe Button -->
+                                            <button type="button" @click="launchUpiApp('phonepe')"
+                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-purple-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
+                                                title="Pay with PhonePe" aria-label="PhonePe">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-6 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">PhonePe</span>
                                             </button>
-                                            <button type="button" @click="depositPayMethod = 'upi'"
-                                                :class="depositPayMethod === 'upi' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'"
-                                                class="py-1.5 px-2 rounded text-center transition-all cursor-pointer">
-                                                💳 UPI ID
+
+                                            <!-- Paytm Button -->
+                                            <button type="button" @click="launchUpiApp('paytm')"
+                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-sky-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
+                                                title="Pay with Paytm" aria-label="Paytm">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-5 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">Paytm</span>
+                                            </button>
+
+                                            <!-- BHIM / Any UPI App Button -->
+                                            <button type="button" @click="launchUpiApp('bhim')"
+                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-emerald-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
+                                                title="Pay with BHIM or Any UPI App" aria-label="BHIM UPI">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-5 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">BHIM / UPI</span>
                                             </button>
                                         </div>
 
-                                        <!-- METHOD 1: SCAN STANDARD NPCI STATIC QR CODE -->
-                                        <div x-show="depositPayMethod === 'qr'" class="text-center space-y-2">
-                                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm inline-block mx-auto">
-                                                <img :src="getUpiQrCodeUrl(topUpAmount, isLeaderOrAdmin() ? topUpMember : currentUser, topUpNote, true)"
-                                                    alt="Scan NPCI Static UPI QR Code" class="w-44 h-44 object-contain mx-auto block" />
-                                            </div>
-                                            <div class="text-xs font-bold text-slate-800 flex items-center justify-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                <span>Scan with Google Pay, PhonePe, Paytm, BHIM</span>
-                                            </div>
-                                            <p class="text-[10.5px] text-slate-600 max-w-xs mx-auto leading-normal">
-                                                This is a <strong>Pure Static NPCI P2P QR</strong>. Enter <strong>₹<span class="font-num font-bold" x-text="Number(topUpAmount || 0).toLocaleString()"></span></strong> in your UPI app and submit. It will <em>never</em> be declined for security reasons.
-                                            </p>
-                                        </div>
-
-                                        <!-- METHOD 2: PAY VIA MOBILE NUMBER (100% RELIABLE) -->
-                                        <div x-show="depositPayMethod === 'phone'" class="space-y-2.5">
-                                            <template x-if="getPayeePhone()">
-                                                <div class="p-3 rounded-lg border border-indigo-200 bg-indigo-50/60 space-y-2">
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-[11px] font-semibold text-indigo-900">Payee Mobile Number:</span>
-                                                        <span class="text-[10px] text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200 font-bold">PhonePe / GPay</span>
-                                                    </div>
-                                                    <div class="flex items-center justify-between bg-white p-2.5 rounded border border-indigo-200 shadow-xs">
-                                                        <span class="font-mono text-base font-bold text-slate-900 tracking-wider" x-text="getPayeePhone()"></span>
-                                                        <button type="button" @click="copyText(getPayeePhone(), 'Mobile Number')"
-                                                            class="btn-ink text-xs py-1 px-3 flex items-center gap-1 cursor-pointer font-bold"
-                                                            style="background: var(--spine); color: #ffffff;">
-                                                            <span>📋 Copy Number</span>
-                                                        </button>
-                                                    </div>
-                                                    <ol class="text-[11px] text-indigo-950 space-y-1 list-decimal list-inside leading-relaxed bg-white/70 p-2 rounded">
-                                                        <li>Open <strong>PhonePe</strong>, <strong>Google Pay</strong>, or <strong>Paytm</strong>.</li>
-                                                        <li>Tap <strong>"To Mobile Number"</strong> / <strong>"Pay Phone Number"</strong>.</li>
-                                                        <li>Paste <strong class="font-mono" x-text="getPayeePhone()"></strong> and verify payee: <strong class="capitalize" x-text="data.leader"></strong>.</li>
-                                                        <li>Send <strong>₹<span x-text="Number(topUpAmount || 0).toLocaleString()"></span></strong> and confirm below!</li>
-                                                    </ol>
-                                                </div>
-                                            </template>
-                                            <template x-if="!getPayeePhone()">
-                                                <div class="p-3 rounded border text-center text-xs text-slate-500">
-                                                    The current holder's UPI ID does not start with a mobile number. Please use the Static QR or UPI ID tab.
-                                                </div>
-                                            </template>
-                                        </div>
-
-                                        <!-- METHOD 3: PAY VIA UPI ID (PRIMARY & REGISTERED) -->
-                                        <div x-show="depositPayMethod === 'upi'" class="space-y-2">
-                                            <div class="p-2.5 rounded border border-slate-200 bg-slate-50 space-y-2">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-[11px] font-semibold text-slate-700">Primary Clean UPI Handle:</span>
-                                                    <button type="button" @click="copyText(getPrimaryUpiId(), 'Primary UPI ID')"
-                                                        class="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 underline cursor-pointer">
-                                                        Copy Primary ID
-                                                    </button>
-                                                </div>
-                                                <div class="font-mono text-xs font-bold text-slate-900 bg-white p-2 rounded border border-slate-200" x-text="getPrimaryUpiId()"></div>
-                                                
-                                                <template x-if="getPrimaryUpiId() !== data.upi_id">
-                                                    <div class="pt-1.5 border-t border-slate-200">
-                                                        <div class="flex items-center justify-between text-[10.5px]">
-                                                            <span class="text-slate-600">Registered Sub-Handle:</span>
-                                                            <button type="button" @click="copyText(data.upi_id, 'Registered UPI ID')"
-                                                                class="text-indigo-700 hover:underline font-medium cursor-pointer">Copy</button>
-                                                        </div>
-                                                        <span class="font-mono text-[11px] text-slate-700" x-text="data.upi_id"></span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                            <p class="text-[10.5px] text-slate-600 leading-normal">
-                                                Open your UPI app $\rightarrow$ select <strong>"Pay to UPI ID"</strong> $\rightarrow$ paste the copied ID and enter ₹<strong x-text="Number(topUpAmount || 0).toLocaleString()"></strong>.
-                                            </p>
-                                        </div>
-
-                                        <!-- Direct Launch Buttons via Standard Static Intent -->
-                                        <div class="pt-2 border-t space-y-1.5" style="border-color: var(--rule-soft);">
-                                            <div class="flex items-center justify-between text-[10.5px]">
-                                                <span class="font-medium text-slate-700">Direct App Launch:</span>
-                                                <span class="text-slate-400">Tap to open app</span>
-                                            </div>
-                                            <div class="grid grid-cols-4 gap-2">
-                                                <!-- Google Pay Button -->
-                                                <button type="button" @click="launchUpiApp('gpay')"
-                                                    class="h-11 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-1.5 transition-all shadow-xs cursor-pointer"
-                                                    title="Google Pay">
-                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-5 w-auto max-w-full object-contain" />
-                                                </button>
-                                                <!-- PhonePe Button -->
-                                                <button type="button" @click="launchUpiApp('phonepe')"
-                                                    class="h-11 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-1.5 transition-all shadow-xs cursor-pointer"
-                                                    title="PhonePe">
-                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-6 w-auto max-w-full object-contain" />
-                                                </button>
-                                                <!-- Paytm Button -->
-                                                <button type="button" @click="launchUpiApp('paytm')"
-                                                    class="h-11 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-1.5 transition-all shadow-xs cursor-pointer"
-                                                    title="Paytm">
-                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-4 w-auto max-w-full object-contain" />
-                                                </button>
-                                                <!-- BHIM UPI Button -->
-                                                <button type="button" @click="launchUpiApp('all')"
-                                                    class="h-11 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-1.5 transition-all shadow-xs cursor-pointer"
-                                                    title="BHIM UPI">
-                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-4 w-auto max-w-full object-contain" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <p class="text-[11px] text-slate-500 text-center">
+                                            Tap any app above to open it directly with ₹<span class="font-num font-bold text-slate-700" x-text="Number(topUpAmount || 0).toLocaleString()"></span> prefilled ready to pay.
+                                        </p>
                                     </div>
 
                                     <!-- Redirection Feedback Banner -->
@@ -3238,12 +3148,12 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <div>
-                                            <span class="font-bold">Payment initiated!</span> After completing the payment in your UPI app, click <strong>"Confirm deposit"</strong> below to record it in the passbook.
+                                            <span class="font-bold">App opened!</span> After completing the payment in your app, click <strong>"Confirm deposit"</strong> below to record it in the passbook.
                                         </div>
                                     </div>
 
                                     <!-- Payee Verification & Copy Button -->
-                                    <div class="flex items-center justify-between pt-1 border-t text-[10px]" style="border-color: var(--rule-soft); color: var(--ink-faint);">
+                                    <div class="flex items-center justify-between pt-1 border-t text-[10.5px]" style="border-color: var(--rule-soft); color: var(--ink-faint);">
                                         <span>Payee: <strong class="capitalize" x-text="data.leader || 'Room Account'"></strong> · <span x-text="data.month"></span> Holder (<span class="font-num" x-text="data.upi_id"></span>)</span>
                                         <button type="button" @click="copyUpiId(data.upi_id)"
                                             class="font-semibold text-emerald-800 hover:text-emerald-900 underline flex items-center gap-1 cursor-pointer">
@@ -4391,12 +4301,12 @@
                     const cleanAmt = Math.min(100000, Math.max(0.01, numAmt)).toFixed(2);
                     const rawLeader = this.data?.leader || 'Roommate';
                     const payeeName = (rawLeader.charAt(0).toUpperCase() + rawLeader.slice(1)).replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR`;
+                    // NPCI P2P specification: strictly pa, pn, am, cu, tn (no merchant tr/mc to prevent security risk decline)
+                    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=RoomDeposit`;
                 },
 
-                getUpiQrCodeUrl(amt, member, note, forceStatic = true) {
-                    // Pure static QR code is 100% compliant with NPCI P2P rules and never gets declined for security reasons
-                    const link = forceStatic ? this.getStaticUpiLink() : this.getUpiPayLink(amt, member, note);
+                getUpiQrCodeUrl(amt, member, note) {
+                    const link = this.getUpiPayLink(amt, member, note);
                     return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
                 },
 
@@ -4410,30 +4320,82 @@
                         alert('Deposit amount cannot exceed ₹1,00,000 per standard UPI limits.');
                         return;
                     }
-                    const upi = (this.data?.upi_id || '').trim();
+                    const upi = (this.data?.upi_id || '').trim().toLowerCase();
                     if (!upi) {
                         alert('Room Account UPI ID is not configured yet.');
                         return;
                     }
 
-                    // Auto-copy UPI ID to clipboard
+                    // Check if current user is attempting to pay themselves (NPCI bank security decline reason)
+                    const currentUserName = (this.currentUser || '').trim().toLowerCase();
+                    const leaderName = (this.data?.leader || '').trim().toLowerCase();
+                    if (currentUserName && leaderName && currentUserName === leaderName) {
+                        alert(
+                            `⚠️ Bank Security Notice:\n\nYou are logged in as "${this.currentUser}", the designated account holder for ${this.data.month}.\n\nBanks and UPI apps (PhonePe, GPay, Paytm) strictly prohibit self-transfers for security.\n\nPlease click the green "✓ Record My Deposit into Ledger" button above to record your share without an unnecessary self-transfer.`
+                        );
+                        return;
+                    }
+
+                    // Auto-copy UPI ID to clipboard as a convenient fallback
                     this.copyUpiId(upi);
+
+                    const cleanAmt = Math.min(100000, Math.max(0.01, amt)).toFixed(2);
+                    const rawLeader = this.data?.leader || 'Roommate';
+                    // Clean alphabetic payee name (NPCI compliance: max 30 chars, no special symbols)
+                    const payeeName = (rawLeader.charAt(0).toUpperCase() + rawLeader.slice(1))
+                        .replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
+
+                    // Clean transaction note (NPCI P2P compliant)
+                    const tn = 'RoomDeposit';
+
+                    // Standard query parameters with amount PREFILLED (strictly P2P parameters)
+                    const queryParams = `pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=${encodeURIComponent(tn)}`;
+
+                    const universalUpiUrl = `upi://pay?${queryParams}`;
+                    let targetUrl = universalUpiUrl;
+
+                    const ua = navigator.userAgent || '';
+                    const isAndroid = /Android/i.test(ua);
+                    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+                    if (isAndroid) {
+                        let pkg = '';
+                        if (appName === 'gpay') pkg = 'com.google.android.apps.nbu.paisa.user';
+                        else if (appName === 'phonepe') pkg = 'com.phonepe.app';
+                        else if (appName === 'paytm') pkg = 'net.one97.paytm';
+                        else if (appName === 'bhim') pkg = 'in.org.npci.upiapp';
+
+                        if (pkg) {
+                            // Direct Android Intent syntax to launch specific app with prefilled amount
+                            targetUrl = `intent://pay?${queryParams}#Intent;scheme=upi;package=${pkg};end`;
+                        }
+                    } else if (isIOS) {
+                        if (appName === 'phonepe') targetUrl = `phonepe://pay?${queryParams}`;
+                        else if (appName === 'paytm') targetUrl = `paytmmp://pay?${queryParams}`;
+                        else if (appName === 'gpay') targetUrl = `gpay://upi/pay?${queryParams}`;
+                    }
 
                     this.chosenUpiApp = appName;
                     this.upiRedirected = true;
 
-                    // Standard Compliant NPCI Intent:
-                    // Using pure static URI avoids bank fraud filters from flagging unverified dynamic P2P amounts
-                    const targetUrl = this.getStaticUpiLink();
                     let appLabel = 'UPI App';
                     if (appName === 'gpay') appLabel = 'Google Pay';
                     else if (appName === 'phonepe') appLabel = 'PhonePe';
                     else if (appName === 'paytm') appLabel = 'Paytm';
-                    else if (appName === 'all') appLabel = 'BHIM / UPI App';
+                    else if (appName === 'bhim') appLabel = 'BHIM UPI';
 
-                    this.showToast(`Opening ${appLabel}... (UPI ID copied to clipboard)`);
+                    this.showToast(`Opening ${appLabel} with ₹${Number(cleanAmt).toLocaleString()} prefilled...`);
 
                     window.location.href = targetUrl;
+
+                    // Fallback to universal intent if specific package is not installed on device
+                    if (isAndroid && targetUrl.startsWith('intent://')) {
+                        setTimeout(() => {
+                            if (document.hasFocus()) {
+                                window.location.href = universalUpiUrl;
+                            }
+                        }, 1200);
+                    }
                 },
 
                 launchUpiPayment() {
@@ -4569,8 +4531,8 @@
                     if (!upi || !upi.includes('@')) return '';
                     const leader = this.data?.leader || this.tabHolder || 'Roommate';
                     const payeeName = (leader.charAt(0).toUpperCase() + leader.slice(1)).replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    // Pure Static P2P URI: zero risk-engine security flags
-                    const link = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&cu=INR`;
+                    const cleanAmt = (parseFloat(amt) || 1000).toFixed(2);
+                    const link = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=RoomDeposit`;
                     return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
                 },
 
