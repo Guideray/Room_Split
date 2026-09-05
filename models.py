@@ -50,4 +50,7 @@ class SetMonthData(BaseModel):
     month: str
     auto_calendar: Optional[bool] = False
 
+class UserUpiData(BaseModel):
+    upi_id: str
+
 

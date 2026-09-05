@@ -10,12 +10,15 @@ MONGO_URI = os.getenv(
 DB_NAME = "GuideRay"
 CONFIG_DOC_ID = "room_config"
 
-DEFAULT_MEMBERS = ["yashwanth", "madhu", "siva", "satya", "manohar"]
+DEFAULT_MEMBERS = ["madhu", "satya", "siva", "manohar", "yashwanth"]
+DEFAULT_ROTATION_ORDER = ["madhu", "satya", "siva", "manohar", "yashwanth"]
+
 DEFAULT_CONFIG = {
     "_id": CONFIG_DOC_ID,
     "month": "September",
-    "leader": "yashwanth",
+    "leader": "madhu",
     "base_amount": 1000.0,
+    "upi_id": "",
     "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
 }
 
@@ -180,27 +183,149 @@ def _init_db_and_migrate(db):
                 "base_payment": 0.0
             })
 
+    # 4. Handle legacy unique email index in users collection
+    try:
+        # Backfill distinct email for any existing document with missing/null email
+        for u in users_col.find({"$or": [{"email": None}, {"email": {"$exists": False}}]}):
+            uname = u.get("username") or str(u.get("_id"))
+            users_col.update_one(
+                {"_id": u["_id"]},
+                {"$set": {"email": f"{uname}@roomsplit.local"}}
+            )
+        # Drop legacy unique email index if present
+        idx_info = users_col.index_information()
+        if "email_1" in idx_info:
+            users_col.drop_index("email_1")
+            print("[MongoDB] Successfully dropped legacy unique index 'email_1' from users collection.")
+    except Exception as idx_err:
+        print(f"[MongoDB Warning] Index fix notice: {idx_err}")
+
 
 # ==========================================
 # SEPARATE COLLECTION ACCESSORS
 # ==========================================
+
+def generate_default_rotation_schedule(starting_month: str = "September", starting_holder: str = "madhu") -> Dict[str, str]:
+    order = DEFAULT_ROTATION_ORDER.copy()
+    if starting_holder in order:
+        idx = order.index(starting_holder)
+        order = order[idx:] + order[:idx]
+
+    months_seq = [
+        "September", "October", "November", "December",
+        "January", "February", "March", "April", "May", "June", "July", "August"
+    ]
+    if starting_month in months_seq:
+        s_idx = months_seq.index(starting_month)
+        months_seq = months_seq[s_idx:] + months_seq[:s_idx]
+
+    sched = {}
+    for i, m in enumerate(months_seq):
+        sched[m] = order[i % len(order)]
+    return sched
+
+
+def get_month_schedule() -> Dict[str, str]:
+    db = get_db()
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    sched = cfg.get("month_schedule") if cfg else None
+    if not sched or not isinstance(sched, dict) or len(sched) < 12:
+        sched = generate_default_rotation_schedule()
+        db["config"].update_one(
+            {"_id": CONFIG_DOC_ID},
+            {"$set": {"month_schedule": sched}},
+            upsert=True
+        )
+    return sched
+
+
+def update_month_holder(month: str, holder: str):
+    db = get_db()
+    clean_holder = holder.lower().strip()
+    sched = get_month_schedule()
+    sched[month] = clean_holder
+    update_set = {
+        "month_schedule": sched,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    if cfg and cfg.get("month") == month:
+        update_set["leader"] = clean_holder
+
+    db["config"].update_one(
+        {"_id": CONFIG_DOC_ID},
+        {"$set": update_set},
+        upsert=True
+    )
+    return sched
+
+
+def swap_month_holders(month_a: str, month_b: str):
+    db = get_db()
+    sched = get_month_schedule()
+    holder_a = sched.get(month_a, "madhu")
+    holder_b = sched.get(month_b, "satya")
+    sched[month_a] = holder_b
+    sched[month_b] = holder_a
+
+    update_set = {
+        "month_schedule": sched,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    if cfg:
+        cur_m = cfg.get("month")
+        if cur_m == month_a:
+            update_set["leader"] = holder_b
+        elif cur_m == month_b:
+            update_set["leader"] = holder_a
+
+    db["config"].update_one(
+        {"_id": CONFIG_DOC_ID},
+        {"$set": update_set},
+        upsert=True
+    )
+    return sched
+
+
+def reset_month_schedule():
+    db = get_db()
+    sched = generate_default_rotation_schedule()
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    cur_m = cfg.get("month", "September") if cfg else "September"
+    update_set = {
+        "month_schedule": sched,
+        "leader": sched.get(cur_m, "madhu"),
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    db["config"].update_one(
+        {"_id": CONFIG_DOC_ID},
+        {"$set": update_set},
+        upsert=True
+    )
+    return sched
+
 
 def get_config() -> Dict[str, Any]:
     db = get_db()
     cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
     if not cfg:
         cfg = DEFAULT_CONFIG.copy()
-    
+
     # Auto-calendar sync: if auto_calendar is enabled (default True), automatically match the real-world calendar month
     auto_cal = cfg.get("auto_calendar", True)
     cur_cal_month = datetime.now().strftime("%B")  # e.g., "September"
+    sched = get_month_schedule()
     if auto_cal and cfg.get("month") != cur_cal_month:
         cfg["month"] = cur_cal_month
         cfg["auto_calendar"] = True
+        if cur_cal_month in sched:
+            cfg["leader"] = sched[cur_cal_month]
         db["config"].update_one(
             {"_id": CONFIG_DOC_ID},
             {"$set": {
                 "month": cur_cal_month,
+                "leader": cfg.get("leader", "madhu"),
                 "auto_calendar": True,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
             }},
@@ -211,30 +336,71 @@ def get_config() -> Dict[str, Any]:
 
 def set_month(month: str, auto_calendar: bool = False):
     db = get_db()
+    sched = get_month_schedule()
+    set_fields = {
+        "month": month,
+        "auto_calendar": auto_calendar,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    if month in sched:
+        set_fields["leader"] = sched[month]
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
-        {"$set": {
-            "month": month,
-            "auto_calendar": auto_calendar,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }},
+        {"$set": set_fields},
         upsert=True
     )
 
 
-def update_config(month: str, leader: str, base_amount: float, auto_calendar: bool = False):
+def update_config(month: str, leader: str, base_amount: float, auto_calendar: bool = False, upi_id: str = ""):
     db = get_db()
+    clean_leader = leader.lower().strip()
+    sched = get_month_schedule()
+    sched[month] = clean_leader
+
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
         {"$set": {
             "month": month,
-            "leader": leader.lower().strip(),
+            "leader": clean_leader,
             "base_amount": float(base_amount),
             "auto_calendar": auto_calendar,
+            "upi_id": upi_id.strip().lower(),
+            "month_schedule": sched,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
         }},
         upsert=True
     )
+
+
+def update_upi_id(upi_id: str):
+    return update_upi_and_holder(upi_id)
+
+
+def update_upi_and_holder(upi_id: str, leader: Optional[str] = None):
+    db = get_db()
+    clean_upi = upi_id.strip().lower()
+    update_fields = {
+        "upi_id": clean_upi,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    cur_leader = (leader.lower().strip() if leader else (cfg.get("leader") or "madhu").lower().strip()) if cfg else "madhu"
+    if leader:
+        clean_leader = leader.lower().strip()
+        update_fields["leader"] = clean_leader
+        cur_m = cfg.get("month", "September") if cfg else "September"
+        sched = get_month_schedule()
+        sched[cur_m] = clean_leader
+        update_fields["month_schedule"] = sched
+
+    save_user_upi(cur_leader, clean_upi)
+
+    db["config"].update_one(
+        {"_id": CONFIG_DOC_ID},
+        {"$set": update_fields},
+        upsert=True
+    )
+    return clean_upi
 
 
 def get_members_list() -> List[str]:
@@ -360,15 +526,142 @@ def get_user_passwords() -> Dict[str, str]:
 def save_user_password(username: str, password_hash: str):
     db = get_db()
     u_clean = username.lower().strip()
-    db["users"].update_one(
-        {"username": u_clean},
-        {"$set": {
-            "username": u_clean,
-            "password_hash": password_hash,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
-        }},
-        upsert=True
-    )
+    try:
+        db["users"].update_one(
+            {"username": u_clean},
+            {
+                "$set": {
+                    "username": u_clean,
+                    "password_hash": password_hash,
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+                },
+                "$setOnInsert": {
+                    "email": f"{u_clean}@roomsplit.local"
+                }
+            },
+            upsert=True
+        )
+    except Exception as e:
+        print(f"[MongoDB Warning] save_user_password fallback: {e}")
+        try:
+            db["users"].drop_index("email_1")
+        except Exception:
+            pass
+        db["users"].update_one(
+            {"username": u_clean},
+            {"$set": {
+                "password_hash": password_hash,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+            }}
+        )
+
+
+def get_user_upi(username: str) -> str:
+    """Retrieve the personal room money UPI ID for a specific roommate."""
+    if not username:
+        return ""
+    try:
+        db = get_db()
+        u_clean = username.lower().strip()
+        user_doc = db["users"].find_one({"username": u_clean})
+        if user_doc and user_doc.get("upi_id"):
+            return user_doc["upi_id"]
+
+        # Fallback to room config if user is currently the active leader
+        cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+        if cfg:
+            leader = (cfg.get("leader") or "madhu").lower().strip()
+            config_upi = cfg.get("upi_id", "")
+            if (u_clean == leader or u_clean == "madhu") and config_upi:
+                try:
+                    db["users"].update_one(
+                        {"username": u_clean},
+                        {
+                            "$set": {"upi_id": config_upi},
+                            "$setOnInsert": {
+                                "username": u_clean,
+                                "email": f"{u_clean}@roomsplit.local"
+                            }
+                        },
+                        upsert=True
+                    )
+                except Exception as up_err:
+                    print(f"[MongoDB Warning] get_user_upi upsert notice: {up_err}")
+                    try:
+                        db["users"].drop_index("email_1")
+                        db["users"].update_one(
+                            {"username": u_clean},
+                            {"$set": {"upi_id": config_upi}}
+                        )
+                    except Exception:
+                        pass
+                return config_upi
+    except Exception as err:
+        print(f"[MongoDB Warning] Error in get_user_upi: {err}")
+    return ""
+
+
+def save_user_upi(username: str, upi_id: str) -> str:
+    """Save a roommate's personal room money UPI ID."""
+    db = get_db()
+    u_clean = username.lower().strip()
+    clean_upi = upi_id.strip().lower()
+
+    try:
+        db["users"].update_one(
+            {"username": u_clean},
+            {
+                "$set": {
+                    "username": u_clean,
+                    "upi_id": clean_upi,
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+                },
+                "$setOnInsert": {
+                    "email": f"{u_clean}@roomsplit.local"
+                }
+            },
+            upsert=True
+        )
+    except Exception as e:
+        print(f"[MongoDB Warning] save_user_upi upsert notice: {e}")
+        try:
+            db["users"].drop_index("email_1")
+        except Exception:
+            pass
+        db["users"].update_one(
+            {"username": u_clean},
+            {"$set": {
+                "upi_id": clean_upi,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+            }}
+        )
+
+    # If this user is currently the active room account holder, sync config upi_id
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
+    cur_leader = (cfg.get("leader") or "madhu").lower().strip() if cfg else "madhu"
+    if u_clean == cur_leader or u_clean == "madhu":
+        db["config"].update_one(
+            {"_id": CONFIG_DOC_ID},
+            {"$set": {
+                "upi_id": clean_upi,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+            }},
+            upsert=True
+        )
+    return clean_upi
+
+
+def get_all_user_upis() -> Dict[str, str]:
+    """Returns mapping of all roommates to their personal UPI IDs."""
+    db = get_db()
+    cursor = db["users"].find({"upi_id": {"$exists": True, "$ne": ""}})
+    res = {}
+    for doc in cursor:
+        u = doc.get("username")
+        upi = doc.get("upi_id")
+        if u and upi:
+            res[u.lower().strip()] = upi
+    return res
 
 
 # ==========================================
@@ -467,10 +760,22 @@ def load_db() -> Dict[str, Any]:
     deposits = get_all_deposits()
     passwords = get_user_passwords()
 
+    sched = get_month_schedule()
+    current_month = cfg.get("month", "September")
+    active_leader = cfg.get("leader") or sched.get(current_month, "madhu")
+    try:
+        active_upi = get_user_upi(active_leader) or cfg.get("upi_id", "")
+    except Exception as upi_err:
+        print(f"[MongoDB Warning] load_db get_user_upi: {upi_err}")
+        active_upi = cfg.get("upi_id", "")
+
     return {
-        "month": cfg.get("month", "September"),
-        "leader": cfg.get("leader", "yashwanth"),
+        "month": current_month,
+        "leader": active_leader,
         "base_amount": float(cfg.get("base_amount", 1000.0)),
+        "upi_id": active_upi,
+        "holder_schedule": sched,
+        "rotation_order": DEFAULT_ROTATION_ORDER,
         "members": members,
         "base_payments": base_payments,
         "expenses": expenses,
@@ -488,11 +793,12 @@ def save_db(data: Dict[str, Any]):
         return
 
     # Update config collection
-    if "month" in data or "leader" in data or "base_amount" in data:
+    if "month" in data or "leader" in data or "base_amount" in data or "upi_id" in data:
         update_config(
             month=data.get("month", "September"),
             leader=data.get("leader", "yashwanth"),
-            base_amount=float(data.get("base_amount", 1000.0))
+            base_amount=float(data.get("base_amount", 1000.0)),
+            upi_id=data.get("upi_id", "")
         )
 
     # Update members & payments collection

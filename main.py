@@ -7,17 +7,19 @@ from fastapi.staticfiles import StaticFiles
 
 from database import (
     load_db, save_db, get_db,
-    get_config, update_config, set_month,
+    get_config, update_config, update_upi_id, update_upi_and_holder, set_month,
+    get_month_schedule, update_month_holder, swap_month_holders, reset_month_schedule, DEFAULT_ROTATION_ORDER,
     get_members_list, get_base_payments, set_member_payment, add_member_if_missing, set_all_members,
     get_all_expenses, add_expense_record, delete_expense_record,
     get_all_deposits, add_deposit_record, delete_deposit_record,
     get_user_passwords, save_user_password,
+    get_user_upi, save_user_upi, get_all_user_upis,
     delete_member_record, admin_reset_user_password,
     reset_all_expenses, reset_all_deposits, factory_reset_all_data, get_detailed_users_list
 )
 from models import (
     SetupData, PaymentData, ExpenseData, TopUpData, LoginData, ChangePasswordData,
-    CreateUserData, AdminCreateUserData, AdminResetPasswordData, SetMonthData
+    CreateUserData, AdminCreateUserData, AdminResetPasswordData, SetMonthData, UserUpiData
 )
 from calculator import calculate_summary
 from auth import DEFAULT_PASSWORD, hash_password, verify_password, create_jwt_token, decode_jwt_token
@@ -102,10 +104,14 @@ def login(login_data: LoginData, response: Response):
             display_name = m
             break
 
+    user_upi = get_user_upi(username)
+
     return {
         "status": "success",
         "token": token,
-        "username": display_name
+        "username": display_name,
+        "user_upi": user_upi,
+        "has_upi": bool(user_upi and "@" in user_upi)
     }
 
 
@@ -129,6 +135,7 @@ def get_current_session(request: Request):
 
     leader = (data.get("leader") or "").lower()
     is_admin = (sub.lower() == "admin" or sub.lower() == leader)
+    user_upi = get_user_upi(sub)
 
     return {
         "authenticated": True,
@@ -136,7 +143,34 @@ def get_current_session(request: Request):
         "members": members,
         "leader": data.get("leader", ""),
         "is_admin": is_admin,
-        "has_custom_password": sub in data.get("passwords", {})
+        "has_custom_password": sub in data.get("passwords", {}),
+        "user_upi": user_upi,
+        "has_upi": bool(user_upi and "@" in user_upi)
+    }
+
+
+@app.post("/api/user/upi")
+def save_personal_upi(payload: UserUpiData, request: Request):
+    token = get_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    token_payload = decode_jwt_token(token)
+    if not token_payload:
+        raise HTTPException(status_code=401, detail="Invalid session.")
+
+    sub = token_payload.get("sub", "").strip().lower()
+    clean_upi = payload.upi_id.strip().lower()
+
+    if clean_upi:
+        if "@" not in clean_upi or len(clean_upi.split("@")) != 2 or not clean_upi.split("@")[1]:
+            raise HTTPException(status_code=400, detail="Invalid UPI ID format. Please use a valid handle like yourname@okaxis, 9876543210@ybl, or name@paytm.")
+
+    saved_upi = save_user_upi(sub, clean_upi)
+    return {
+        "status": "success",
+        "username": sub,
+        "upi_id": saved_upi,
+        "message": "Personal room money UPI credentials saved successfully."
     }
 
 
@@ -255,8 +289,121 @@ def admin_update_config(payload: dict, request: Request):
     leader = payload.get("leader", "yashwanth")
     base_amount = float(payload.get("base_amount", 1000.0))
     auto_cal = bool(payload.get("auto_calendar", False))
-    update_config(matched_month, leader, base_amount, auto_cal)
+    upi_id = str(payload.get("upi_id", "")).strip().lower()
+
+    # Enhanced Security: Validate UPI handle syntax (alphanumeric, dot, underscore, dash + @ + bank)
+    if upi_id:
+        import re
+        if not re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", upi_id):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid UPI ID format. Please provide a valid handle (e.g., 9876543210@upi or name@okhdfcbank)."
+            )
+
+    update_config(matched_month, leader, base_amount, auto_cal, upi_id=upi_id)
     return {"status": "success", "message": "Passbook configuration updated successfully."}
+
+
+@app.post("/api/update_upi")
+def api_update_upi(payload: dict, request: Request):
+    token = get_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    token_payload = decode_jwt_token(token)
+    if not token_payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    sub = token_payload.get("sub", "").lower().strip()
+    data = load_db()
+    current_leader = (data.get("leader") or "").lower().strip()
+    if sub != "admin" and sub != current_leader:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access restricted: Only the current account holder ({current_leader.title()}) can change the account holder or update room UPI credentials."
+        )
+    
+    raw_upi = str(payload.get("upi_id", "")).strip().lower()
+    if raw_upi:
+        import re
+        if not re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", raw_upi):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid UPI ID format. Please provide a valid handle (e.g., 9876543210@upi or name@okhdfcbank)."
+            )
+    new_leader = payload.get("leader")
+    clean_leader = None
+    if new_leader:
+        members = get_members_list()
+        matched = next((m for m in members if m.lower() == str(new_leader).strip().lower()), None)
+        if matched:
+            clean_leader = matched
+        else:
+            clean_leader = str(new_leader).strip().lower()
+
+    clean_upi = update_upi_and_holder(raw_upi, clean_leader)
+    return {
+        "status": "success",
+        "upi_id": clean_upi,
+        "leader": clean_leader,
+        "message": "UPI details and account holder updated successfully."
+    }
+
+
+@app.get("/api/holder_schedule")
+def api_get_holder_schedule(request: Request):
+    token = get_token_from_request(request)
+    sub = ""
+    if token:
+        payload = decode_jwt_token(token)
+        if payload:
+            sub = payload.get("sub", "").lower().strip()
+    data = load_db()
+    current_leader = (data.get("leader") or "").lower().strip()
+    is_admin = (sub == "admin")
+    sched = get_month_schedule()
+    return {
+        "status": "success",
+        "rotation_order": DEFAULT_ROTATION_ORDER,
+        "schedule": sched,
+        "current_month": data.get("month", "September"),
+        "current_leader": current_leader,
+        "can_manage": is_admin
+    }
+
+
+@app.post("/api/holder_schedule/set")
+def api_set_month_holder(payload: dict, request: Request):
+    caller = require_admin(request)
+    month = str(payload.get("month", "")).strip()
+    holder = str(payload.get("holder", "")).strip().lower()
+    if month not in VALID_CALENDAR_MONTHS:
+        raise HTTPException(status_code=400, detail=f"Invalid month '{month}'.")
+    members = get_members_list()
+    if holder not in [m.lower() for m in members]:
+        raise HTTPException(status_code=400, detail=f"Unknown roommate '{holder}'.")
+    sched = update_month_holder(month, holder)
+    return {"status": "success", "schedule": sched, "message": f"{holder.title()} assigned as holder for {month}."}
+
+
+@app.post("/api/holder_schedule/swap")
+def api_swap_month_holders(payload: dict, request: Request):
+    caller = require_admin(request)
+    month_a = str(payload.get("month_a", "")).strip()
+    month_b = str(payload.get("month_b", "")).strip()
+    if month_a not in VALID_CALENDAR_MONTHS or month_b not in VALID_CALENDAR_MONTHS:
+        raise HTTPException(status_code=400, detail="Invalid month(s) specified.")
+    if month_a == month_b:
+        raise HTTPException(status_code=400, detail="Please select two different months to swap.")
+    sched = swap_month_holders(month_a, month_b)
+    return {"status": "success", "schedule": sched, "message": f"Successfully swapped account holders for {month_a} and {month_b}."}
+
+
+@app.post("/api/holder_schedule/reset")
+def api_reset_holder_schedule(request: Request):
+    caller = require_admin(request)
+    sched = reset_month_schedule()
+    return {"status": "success", "schedule": sched, "message": "Reset to standard rotation schedule: Madhu → Satya → Siva → Manohar → Yashwanth."}
+
+
 
 
 @app.post("/api/setup")
@@ -390,11 +537,15 @@ def add_topup(topup: TopUpData, request: Request):
         raise HTTPException(status_code=400, detail="Member not found")
     if topup.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+    if topup.amount > 100000:
+        raise HTTPException(status_code=400, detail="Single deposit cannot exceed ₹1,00,000 (standard UPI transaction limit).")
+
+    sanitized_note = (topup.note or "Pool Top-up").strip()[:60]
 
     new_deposit = add_deposit_record({
         "member": topup.member,
         "amount": round(float(topup.amount), 2),
-        "note": topup.note or "Pool Top-up",
+        "note": sanitized_note,
         "date": datetime.now().strftime("%Y-%m-%d %H:%M")
     })
 

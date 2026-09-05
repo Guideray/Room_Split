@@ -355,6 +355,11 @@
                 :style="activeTab === 'users' ? 'border-bottom: 2px solid var(--ink); color: var(--ink); font-weight:700;' : 'color: var(--ink-soft);'">
                 <span>👥 Roommates & Users</span>
             </button>
+            <button @click="activeTab = 'schedule'"
+                class="py-2.5 px-4 transition flex items-center gap-1.5"
+                :style="activeTab === 'schedule' ? 'border-bottom: 2px solid var(--ink); color: var(--ink); font-weight:700;' : 'color: var(--ink-soft);'">
+                <span>🗓️ 12-Month Rotation Schedule</span>
+            </button>
             <button @click="activeTab = 'config'"
                 class="py-2.5 px-4 transition flex items-center gap-1.5"
                 :style="activeTab === 'config' ? 'border-bottom: 2px solid var(--ink); color: var(--ink); font-weight:700;' : 'color: var(--ink-soft);'">
@@ -482,7 +487,199 @@
             </div>
         </div>
 
-        <!-- TAB 2: PASSBOOK CONFIGURATION -->
+        <!-- TAB 2: MONTHLY ROTATION SCHEDULE GOVERNANCE (ADMIN MASTER AUTHORITY) -->
+        <div x-show="activeTab === 'schedule'" class="space-y-6">
+
+            <!-- Admin Master Authority Card -->
+            <div class="page p-5 sm:p-6 shadow-sm space-y-4" style="border-left: 4px solid var(--ink);">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 rule-row">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="stamp-badge text-[9px] py-0.5 px-2 font-bold" style="background:var(--spine); color:#e7c77c; border-color:#e7c77c;">ADMIN MASTER AUTHORITY</span>
+                            <span class="text-[10px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded">
+                                Standard Order: Madhu → Satya → Siva → Manohar → Yashwanth
+                            </span>
+                        </div>
+                        <h3 class="font-head text-lg font-bold mt-1">12-Month Account Holder Schedule</h3>
+                        <p class="text-xs mt-0.5" style="color: var(--ink-soft);">
+                            As Administrator, you decide and govern the room account holder for each month. Changes instantly reflect across the entire room passbook and UPI payee system.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="openAdminSwapModal()"
+                            class="btn-ink text-xs flex items-center gap-1.5 py-1.5 px-3 font-semibold shadow-xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Swap Months
+                        </button>
+                        <button type="button" @click="resetAdminSchedule()"
+                            class="btn-outline text-xs flex items-center gap-1.5 py-1.5 px-2.5 text-slate-600 hover:text-slate-900 shadow-xs cursor-pointer"
+                            title="Reset rotation to default 5-person sequence">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset Default
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 12-Month Admin Schedule Table -->
+                <div class="overflow-hidden rounded-[3px] shadow-2xs mt-1" style="background: var(--paper-raised); border: 1px solid var(--rule);">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[700px] border-collapse">
+                            <thead>
+                                <tr class="text-[10.5px] font-bold uppercase tracking-wider font-head"
+                                    style="background: var(--paper); border-bottom: 1.5px solid var(--rule); color: var(--ink-soft);">
+                                    <th class="py-3 px-4 w-20 text-center font-num shrink-0 whitespace-nowrap">Turn #</th>
+                                    <th class="py-3 px-4 min-w-[170px] shrink-0 whitespace-nowrap">Calendar Month</th>
+                                    <th class="py-3 px-4 min-w-[240px]">Designated Account Holder</th>
+                                    <th class="py-3 px-4 min-w-[150px] shrink-0 whitespace-nowrap">Rotation Status</th>
+                                    <th class="py-3 px-4 text-right min-w-[120px] shrink-0 whitespace-nowrap">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y" style="border-color: var(--rule-soft);">
+                                <template x-for="(monthName, mIdx) in getOrderedScheduleMonths()" :key="'admin-sched-' + monthName">
+                                    <tr class="transition-colors"
+                                        :style="(config.month === monthName) 
+                                            ? 'background: var(--credit-bg); border-left: 4px solid var(--credit);' 
+                                            : 'background: var(--paper-raised);'"
+                                        :class="(config.month !== monthName) ? 'hover:bg-[#ebe5d5]/60' : ''">
+                                        
+                                        <!-- Cycle / Turn Identifier -->
+                                        <td class="py-3.5 px-4 text-center shrink-0 whitespace-nowrap">
+                                            <span class="inline-flex items-center justify-center font-num text-xs font-bold px-2.5 py-1 rounded shrink-0 whitespace-nowrap shadow-2xs"
+                                                :style="(config.month === monthName) 
+                                                    ? 'background: var(--credit); color: #ffffff;' 
+                                                    : 'background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule);'"
+                                                x-text="'M' + (mIdx + 1)"></span>
+                                        </td>
+
+                                        <!-- Calendar Month Name with Perfectly Sized Active Now Badge -->
+                                        <td class="py-3.5 px-4 shrink-0 whitespace-nowrap">
+                                            <div class="flex items-center gap-2.5 shrink-0 whitespace-nowrap">
+                                                <span class="text-sm font-bold capitalize shrink-0 whitespace-nowrap"
+                                                    :style="(config.month === monthName) ? 'color: var(--credit); font-weight: 700;' : 'color: var(--ink);'"
+                                                    x-text="monthName"></span>
+                                                <template x-if="config.month === monthName">
+                                                    <span class="stamp-badge stamp-credit text-[10px] py-0.5 px-2 font-bold shrink-0 whitespace-nowrap shadow-xs" style="transform:none;">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                                        Active Now
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </td>
+
+                                        <!-- Designated Room Account Holder with Admin Selector -->
+                                        <td class="py-3.5 px-4">
+                                            <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
+                                                <div class="avatar shrink-0 font-bold shadow-2xs" style="width:28px;height:28px;font-size:11px;"
+                                                    :style="'background-color:' + getMemberColor(getMonthHolder(monthName))"
+                                                    x-text="getMonthHolder(monthName).charAt(0).toUpperCase()"></div>
+                                                <div class="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                                                    <select :value="getMonthHolder(monthName)"
+                                                        @change="assignMonthHolder(monthName, $event.target.value)"
+                                                        class="field text-xs font-bold capitalize py-1 px-2 rounded shadow-2xs cursor-pointer"
+                                                        style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
+                                                        <template x-for="m in members" :key="'opt-' + monthName + '-' + m">
+                                                            <option :value="m" x-text="m" :selected="getMonthHolder(monthName) === m"></option>
+                                                        </template>
+                                                    </select>
+                                                    <span class="stamp-badge text-[9.5px] py-0.5 px-2 font-semibold shrink-0 whitespace-nowrap"
+                                                        style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule); transform:none;">
+                                                        Account Holder
+                                                    </span>
+                                                    <template x-if="config.month === monthName">
+                                                        <span class="stamp-badge stamp-credit text-[9.5px] py-0.5 px-2 font-bold shrink-0 whitespace-nowrap shadow-2xs" style="transform:none;">
+                                                            <span>⚡</span> Holds Fund Now
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td class="py-3.5 px-4 shrink-0 whitespace-nowrap">
+                                            <template x-if="config.month === monthName">
+                                                <span class="stamp-badge stamp-credit text-[10.5px] py-1 px-3 font-bold shrink-0 whitespace-nowrap shadow-xs" style="transform:none;">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                                    Active Payee
+                                                </span>
+                                            </template>
+                                            <template x-if="config.month !== monthName">
+                                                <span class="stamp-badge text-[10.5px] py-1 px-2.5 font-medium shrink-0 whitespace-nowrap shadow-2xs"
+                                                    style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule); transform:none;">
+                                                    Scheduled Turn
+                                                </span>
+                                            </template>
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="py-3.5 px-4 text-right shrink-0 whitespace-nowrap">
+                                            <button type="button" @click="openAdminSwapModal(monthName)"
+                                                class="btn-outline text-xs inline-flex items-center gap-1 py-1 px-2.5 font-semibold cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+                                                style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);"
+                                                title="Swap this month with another">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                </svg>
+                                                <span>Swap</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Minimal Footer -->
+                    <div class="py-2.5 px-4 text-center text-[11px] font-num"
+                        style="background: var(--paper); border-top: 1px solid var(--rule); color: var(--ink-soft);">
+                        Automated 12-Month Calendar · Managed exclusively by Administrator in Admin Account
+                    </div>
+                </div>
+
+                <!-- Roommate Holdings Distribution KPI -->
+                <div class="p-4 rounded bg-slate-50 border border-slate-200 mt-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">12-Month Holding Distribution (Per Roommate)</span>
+                        <span class="text-[11px] text-slate-500">Supports multi-month assignment (e.g. 2 months in a row)</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+                        <template x-for="m in members" :key="'dist-' + m">
+                            <div class="p-2.5 rounded bg-white border border-slate-200 shadow-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded-[3px] flex items-center justify-center font-bold text-[10px] text-white"
+                                        :style="'background-color:' + getMemberColor(m)"
+                                        x-text="m.charAt(0).toUpperCase()"></div>
+                                    <span class="text-xs font-bold capitalize text-slate-800" x-text="m"></span>
+                                </div>
+                                <span class="font-num text-xs font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded"
+                                    x-text="(getHolderMonthCounts()[m] || 0) + ' mo'"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Administrative Rules & Operational Guidance -->
+                <div class="p-3.5 rounded bg-indigo-50/70 border border-indigo-200 text-indigo-950 text-xs space-y-1.5">
+                    <div class="flex items-center gap-2 font-bold text-indigo-900">
+                        <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Admin Schedule Governance Rules:</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-[11.5px] text-slate-700 pl-1">
+                        <li><strong>Full Admin Authority:</strong> As Admin, your selections immediately update the live schedule in MongoDB.</li>
+                        <li><strong>Multi-Month Support:</strong> Use the dropdown on any month to assign the same roommate for 2 or more consecutive months.</li>
+                        <li><strong>Swapping Months:</strong> Click <em>"Swap Months"</em> to exchange any two months (e.g. swap October and November).</li>
+                        <li><strong>Live Leader Synchronization:</strong> If you change the holder of the active month (<span class="font-bold font-num" x-text="config.month"></span>), the active room leader and UPI payee update immediately.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: PASSBOOK CONFIGURATION -->
         <div x-show="activeTab === 'config'" class="page p-6 shadow-sm space-y-5" style="border-left: 4px solid var(--stamp);">
             <div class="pb-3 border-b rule-row">
                 <h3 class="font-head text-base font-bold">Month & Account Holder Configuration</h3>
@@ -646,6 +843,65 @@
         </div>
     </div>
 
+    <!-- Admin Swap Months Modal -->
+    <div x-show="showAdminSwapModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm">
+        <div @click.away="showAdminSwapModal = false" class="slip max-w-md w-full p-5 space-y-4 shadow-xl" style="border: 2px solid var(--ink);">
+            <div class="flex items-center justify-between pb-3 rule-row">
+                <div>
+                    <span class="text-[10px] font-num uppercase tracking-widest text-indigo-800 font-bold">Admin Governance</span>
+                    <h3 class="font-head text-base font-bold">Swap Monthly Account Holders</h3>
+                </div>
+                <button type="button" @click="showAdminSwapModal = false" class="text-slate-400 hover:text-slate-800 text-lg font-bold leading-none cursor-pointer">×</button>
+            </div>
+
+            <p class="text-xs text-slate-600">
+                Select any two calendar months to exchange their designated account holders.
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">First Month</label>
+                    <select x-model="swapMonthA" class="field text-xs font-bold">
+                        <template x-for="m in calendarMonths" :key="'adm-swap-a-' + m">
+                            <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Second Month</label>
+                    <select x-model="swapMonthB" class="field text-xs font-bold">
+                        <template x-for="m in calendarMonths" :key="'adm-swap-b-' + m">
+                            <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Preview Banner -->
+            <div class="p-3 rounded bg-indigo-50 border border-indigo-200 text-xs space-y-1">
+                <span class="font-bold text-indigo-950 block">Preview Result:</span>
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <div>
+                        <span class="font-semibold text-slate-700" x-text="swapMonthA"></span>: 
+                        <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthB)"></span>
+                    </div>
+                    <span class="text-indigo-400 font-bold px-1">⇄</span>
+                    <div>
+                        <span class="font-semibold text-slate-700" x-text="swapMonthB"></span>: 
+                        <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthA)"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 rule-row">
+                <button type="button" @click="showAdminSwapModal = false" class="btn-outline text-xs cursor-pointer">Cancel</button>
+                <button type="button" @click="submitAdminSwap()" class="btn-ink text-xs font-bold bg-indigo-700 hover:bg-indigo-800 text-white flex items-center gap-1 cursor-pointer">
+                    Confirm & Save Swap
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Automatic Auth Token Interceptor
         const _origFetch = window.fetch;
@@ -677,8 +933,19 @@
 
                 activeTab: 'users',
                 users: [],
-                config: { month: 'September', leader: 'yashwanth', base_amount: 1000 },
+                config: { month: 'September', leader: 'madhu', base_amount: 1000 },
                 stats: { totalUsers: 0, totalExpensesCount: 0, totalExpensesAmount: 0, roomBalance: 0 },
+
+                // 12-Month Rotation Schedule State
+                monthSchedule: {},
+                members: ['madhu', 'satya', 'siva', 'manohar', 'yashwanth'],
+                calendarMonths: [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ],
+                showAdminSwapModal: false,
+                swapMonthA: 'October',
+                swapMonthB: 'November',
 
                 // Create User Form
                 newUsername: '',
@@ -780,6 +1047,13 @@
                         }
                         if (dataRes.ok) {
                             const dJson = await dataRes.json();
+                            this.monthSchedule = dJson.month_schedule || {};
+                            if (dJson.members && dJson.members.length) {
+                                this.members = dJson.members;
+                            }
+                            if (dJson.leader) this.config.leader = dJson.leader;
+                            if (dJson.month) this.config.month = dJson.month;
+
                             const summary = dJson.summary || {};
                             const expenses = dJson.expenses || [];
                             const totalSpend = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
@@ -899,6 +1173,126 @@
                         }
                     } catch (e) {
                         alert('Error saving passbook configuration.');
+                    }
+                },
+
+                getOrderedScheduleMonths() {
+                    const months = this.calendarMonths || [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const active = this.config.month || 'September';
+                    const idx = months.indexOf(active);
+                    if (idx === -1) return months;
+                    return [...months.slice(idx), ...months.slice(0, idx)];
+                },
+
+                getMonthHolder(month) {
+                    if (!month) return 'madhu';
+                    if (this.monthSchedule && this.monthSchedule[month]) {
+                        return this.monthSchedule[month];
+                    }
+                    const defaultSeq = ['madhu', 'satya', 'siva', 'manohar', 'yashwanth'];
+                    const months = this.calendarMonths || [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const septIdx = months.indexOf('September');
+                    const mIdx = months.indexOf(month);
+                    if (septIdx !== -1 && mIdx !== -1) {
+                        const offset = (mIdx - septIdx + 12) % 12;
+                        return defaultSeq[offset % defaultSeq.length];
+                    }
+                    return 'madhu';
+                },
+
+                getMemberColor(m) {
+                    const map = {
+                        'madhu': '#1f6f54',
+                        'satya': '#6a4a8c',
+                        'siva': '#2f4f7a',
+                        'manohar': '#a23b2e',
+                        'yashwanth': '#b8842a'
+                    };
+                    return map[(m || '').toLowerCase().trim()] || '#1e2a44';
+                },
+
+                getHolderMonthCounts() {
+                    const counts = {};
+                    for (const m of (this.members || [])) counts[m] = 0;
+                    for (const month of (this.calendarMonths || [])) {
+                        const h = this.getMonthHolder(month);
+                        counts[h] = (counts[h] || 0) + 1;
+                    }
+                    return counts;
+                },
+
+                async assignMonthHolder(month, holder) {
+                    try {
+                        const res = await fetch('/api/holder_schedule/set', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ month, holder })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.monthSchedule[month] = holder;
+                            if (this.config.month === month) this.config.leader = holder;
+                            this.showToast(`✓ Admin assigned ${holder} as holder for ${month}`);
+                            await this.fetchAdminData();
+                        } else {
+                            alert(d.detail || 'Failed to update schedule.');
+                        }
+                    } catch (e) {
+                        alert('Network error updating schedule.');
+                    }
+                },
+
+                openAdminSwapModal(initialMonth = null) {
+                    this.swapMonthA = initialMonth || this.config.month || 'October';
+                    const months = this.getOrderedScheduleMonths();
+                    this.swapMonthB = months.find(m => m !== this.swapMonthA) || 'November';
+                    this.showAdminSwapModal = true;
+                },
+
+                async submitAdminSwap() {
+                    if (this.swapMonthA === this.swapMonthB) {
+                        return alert('Please select two different months to swap.');
+                    }
+                    try {
+                        const res = await fetch('/api/holder_schedule/swap', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ month_a: this.swapMonthA, month_b: this.swapMonthB })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.showAdminSwapModal = false;
+                            this.showToast(`✓ Admin swapped: ${this.swapMonthA} ⇄ ${this.swapMonthB}`);
+                            await this.fetchAdminData();
+                        } else {
+                            alert(d.detail || 'Failed to swap months.');
+                        }
+                    } catch (e) {
+                        alert('Network error swapping months.');
+                    }
+                },
+
+                async resetAdminSchedule() {
+                    if (!confirm('Reset schedule to default 5-roommate sequence (Madhu → Satya → Siva → Manohar → Yashwanth)?')) {
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/holder_schedule/reset', { method: 'POST' });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.showToast('✓ Rotation schedule reset to default sequence!');
+                            await this.fetchAdminData();
+                        } else {
+                            alert(d.detail || 'Failed to reset schedule.');
+                        }
+                    } catch (e) {
+                        alert('Network error resetting schedule.');
                     }
                 },
 

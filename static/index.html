@@ -366,6 +366,50 @@
                 color: #000 !important;
             }
         }
+
+        /* Modern, subtle custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+
+        /* Dark sidebar custom scrollbar */
+        aside nav::-webkit-scrollbar,
+        aside::-webkit-scrollbar {
+            width: 5px;
+        }
+        aside nav::-webkit-scrollbar-track,
+        aside::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        aside nav::-webkit-scrollbar-thumb,
+        aside::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+        }
+        aside nav::-webkit-scrollbar-thumb:hover,
+        aside::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.45);
+        }
+
+        /* Firefox support */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+        }
+        aside nav {
+            scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+        }
     </style>
 </head>
 
@@ -579,57 +623,137 @@
                     </svg>
                     <span>Statement</span>
                 </button>
+                <button @click="goToUpiTab(false)" :class="currentTab === 'upi' ? 'active' : ''"
+                    class="tab-index w-full text-left">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>UPI & Payments</span>
+                </button>
+                <button @click="currentTab = 'schedule'; mobileSidebarOpen = false;" :class="currentTab === 'schedule' ? 'active' : ''"
+                    class="tab-index w-full text-left">
+                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Holder Schedule</span>
+                </button>
             </nav>
 
-            <!-- Bottom Section: Logged-in Roommate Profile & Account Actions -->
-            <div class="p-3.5 border-t mt-auto" style="border-color: rgba(255,255,255,.12); background: rgba(0,0,0,0.2);">
-                <div class="flex items-center justify-between gap-2 mb-2.5">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-[4px] flex items-center justify-center font-bold text-xs shadow shrink-0 text-white"
+            <!-- Bottom Section: Logged-in Roommate Profile & Settings Popover -->
+            <div class="p-3 border-t mt-auto relative" x-data="{ sidebarSettingsOpen: false }" @click.outside="sidebarSettingsOpen = false"
+                style="border-color: rgba(255,255,255,.12); background: rgba(0,0,0,0.22);">
+
+                <!-- Profile Row: Avatar + Name on Left, Settings Symbol on Right -->
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" @click="sidebarSettingsOpen = !sidebarSettingsOpen"
+                        class="flex items-center gap-2.5 min-w-0 text-left cursor-pointer group flex-1 p-1 -m-1 rounded transition hover:bg-white/5"
+                        :title="'Signed in as ' + currentUser">
+                        <div class="w-8 h-8 rounded-[4px] flex items-center justify-center font-bold text-xs shadow shrink-0 text-white relative"
                             style="color: #ffffff;" :style="'background-color:' + getMemberColor(currentUser)"
                             x-text="(currentUser || 'U').charAt(0).toUpperCase()"></div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-bold capitalize truncate text-white" x-text="currentUser"></span>
+                                <span class="text-xs font-bold capitalize truncate text-white group-hover:text-amber-200 transition" x-text="currentUser"></span>
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Active"></span>
                             </div>
-                            <span class="text-[9.5px] font-num" style="color: #e7c77c;"
+                            <span class="text-[9.5px] font-num block truncate" style="color: #e7c77c;"
                                 x-text="currentUser === data.leader ? 'Account Holder' : 'Roommate'"></span>
                         </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-1.5">
-                    <button @click="openChangePasswordModal(); mobileSidebarOpen = false;"
-                        class="text-[11px] py-1.5 px-2 rounded-[3px] font-semibold flex items-center justify-center gap-1 transition cursor-pointer hover:bg-white/20"
-                        style="background: rgba(255,255,255,.1); color: var(--paper);"
-                        title="Change your personal login password">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                        Password
                     </button>
-                    <button @click="submitLogout(); mobileSidebarOpen = false;"
-                        class="text-[11px] py-1.5 px-2 rounded-[3px] font-semibold flex items-center justify-center gap-1 transition cursor-pointer hover:opacity-90"
-                        style="background: rgba(162,59,46,0.35); color: #f6e9e4; border: 1px solid rgba(162,59,46,0.55);"
-                        title="Sign out of passbook">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign out
-                    </button>
-                </div>
-                <div class="mt-2 pt-2 border-t flex flex-col gap-1.5" style="border-color: rgba(255,255,255,.08);">
-                    <button @click="openSetupModal(); mobileSidebarOpen = false;"
-                        class="w-full justify-center text-[11px] flex items-center gap-1.5 py-1.5 rounded-[3px] font-semibold cursor-pointer transition hover:bg-white/10"
-                        style="border: 1px solid rgba(255,255,255,.2); color: var(--paper);"
-                        title="Passbook settings">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+
+                    <!-- Settings Cog Symbol Button at the End -->
+                    <button type="button" @click="sidebarSettingsOpen = !sidebarSettingsOpen"
+                        class="w-7 h-7 rounded-[4px] flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
+                        style="border: 1px solid rgba(255,255,255,0.18);"
+                        :class="sidebarSettingsOpen ? 'bg-white/20 text-white border-amber-300/60' : ''"
+                        title="Settings & Options">
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="sidebarSettingsOpen ? 'rotate-90 text-amber-300' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        Passbook settings
                     </button>
+                </div>
+
+                <!-- Settings Popup Menu (Pops Upwards Above Profile) -->
+                <div x-show="sidebarSettingsOpen" x-cloak
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="transform opacity-0 translate-y-2 scale-95"
+                    x-transition:enter-end="transform opacity-100 translate-y-0 scale-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="transform opacity-100 translate-y-0 scale-100"
+                    x-transition:leave-end="transform opacity-0 translate-y-2 scale-95"
+                    class="absolute bottom-full left-2 right-2 mb-2 rounded-[4px] shadow-2xl z-50 overflow-hidden text-xs border"
+                    style="background: var(--paper-raised); border-color: var(--rule);">
+                    
+                    <!-- Header in Popup -->
+                    <div class="p-2.5 border-b flex items-center justify-between" style="background: var(--paper); border-color: var(--rule);">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-6 h-6 rounded-[3px] flex items-center justify-center font-bold text-[10px] shadow shrink-0 text-white"
+                                style="color: #ffffff;" :style="'background-color:' + getMemberColor(currentUser)"
+                                x-text="(currentUser || 'U').charAt(0).toUpperCase()"></div>
+                            <div class="min-w-0">
+                                <span class="text-xs font-bold capitalize truncate block" style="color: var(--ink);" x-text="currentUser"></span>
+                                <span class="text-[9.5px] font-num" style="color: var(--ink-soft);"
+                                    x-text="currentUser === data.leader ? 'Account Holder' : 'Roommate'"></span>
+                            </div>
+                        </div>
+                        <button type="button" @click="sidebarSettingsOpen = false" class="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Action Items List -->
+                    <div class="py-1">
+                        <!-- 1. My Duty UPI -->
+                        <button type="button" @click="sidebarSettingsOpen = false; openUserUpiModal(); mobileSidebarOpen = false;"
+                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center justify-between gap-2 font-medium cursor-pointer transition"
+                            style="color: var(--ink);">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-3.5 h-3.5 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span class="truncate" x-text="myPersonalUpiId ? 'My Duty UPI' : 'Add Duty UPI Details'"></span>
+                            </div>
+                            <template x-if="myPersonalUpiId">
+                                <span class="text-[9.5px] font-num px-1.5 py-0.5 rounded shrink-0"
+                                    style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule-soft);"
+                                    x-text="myPersonalUpiId.length > 12 ? myPersonalUpiId.slice(0, 10) + '…' : myPersonalUpiId"></span>
+                            </template>
+                        </button>
+
+                        <!-- 2. Password -->
+                        <button type="button" @click="sidebarSettingsOpen = false; openChangePasswordModal(); mobileSidebarOpen = false;"
+                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center gap-2 font-medium cursor-pointer transition border-t"
+                            style="border-color: var(--rule-soft); color: var(--ink);">
+                            <svg class="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            <span>Password</span>
+                        </button>
+
+                        <!-- 3. Passbook Settings -->
+                        <button type="button" @click="sidebarSettingsOpen = false; openSetupModal(); mobileSidebarOpen = false;"
+                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center gap-2 font-medium cursor-pointer transition border-t"
+                            style="border-color: var(--rule-soft); color: var(--ink);">
+                            <svg class="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>Passbook settings</span>
+                        </button>
+
+                        <!-- 4. Sign Out -->
+                        <button type="button" @click="sidebarSettingsOpen = false; submitLogout(); mobileSidebarOpen = false;"
+                            class="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2 font-semibold cursor-pointer transition border-t"
+                            style="border-color: var(--rule-soft);">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Sign out</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -1053,8 +1177,18 @@
                                             <span class="font-num text-sm font-bold text-rose-800 whitespace-nowrap"
                                                 x-text="'₹' + s.amount.toLocaleString()"></span>
                                             <template x-if="canDepositFor(s.from)">
-                                                <button @click="openTopUpModal(s.from)"
-                                                    class="btn-outline text-[10px] py-0.5 px-1.5 whitespace-nowrap shrink-0">Deposit</button>
+                                                <div class="flex items-center gap-1.5 shrink-0">
+                                                    <template x-if="data.upi_id && s.from !== 'Room Account'">
+                                                        <a :href="getUpiPayLink(s.amount, s.from, 'Settlement deficit')"
+                                                            title="Pay deficit via UPI app"
+                                                            class="inline-flex items-center gap-1 font-bold text-[10px] py-1 px-2 rounded text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors whitespace-nowrap"
+                                                            style="text-decoration: none;">
+                                                            <span>⚡ UPI</span>
+                                                        </a>
+                                                    </template>
+                                                    <button @click="openTopUpModal(s.from, s.amount)"
+                                                        class="btn-outline text-[10px] py-0.5 px-1.5 whitespace-nowrap shrink-0">Deposit</button>
+                                                </div>
                                             </template>
                                         </div>
                                     </div>
@@ -1231,8 +1365,18 @@
                                         <span class="font-num text-sm font-bold text-rose-800"
                                             x-text="'₹' + s.amount.toLocaleString()"></span>
                                         <template x-if="canDepositFor(s.from)">
-                                            <button @click="openTopUpModal(s.from)"
-                                                class="btn-outline text-[10px] py-0.5 px-1.5">Deposit</button>
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <template x-if="data.upi_id && s.from !== 'Room Account'">
+                                                    <a :href="getUpiPayLink(s.amount, s.from, 'Settlement deficit')"
+                                                        title="Pay deficit via UPI app"
+                                                        class="inline-flex items-center gap-1 font-bold text-[10px] py-1 px-2 rounded text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors whitespace-nowrap"
+                                                        style="text-decoration: none;">
+                                                        <span>⚡ UPI</span>
+                                                    </a>
+                                                </template>
+                                                <button @click="openTopUpModal(s.from, s.amount)"
+                                                    class="btn-outline text-[10px] py-0.5 px-1.5">Deposit</button>
+                                            </div>
                                         </template>
                                     </div>
                                 </div>
@@ -1779,6 +1923,622 @@
                     </div>
                 </div>
 
+                <!-- UPI & Payments Tab -->
+                <div x-show="currentTab === 'upi'" class="space-y-4">
+                    <!-- Redirection Notice if sent from Deposit Slip -->
+                    <div x-show="returnToDepositAfterUpi" x-cloak
+                        class="p-3.5 rounded-[4px] border flex items-start gap-2.5 bg-emerald-50 border-emerald-300 text-emerald-950 shadow-xs">
+                        <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <div class="flex-1 text-xs">
+                            <div class="font-bold text-sm text-emerald-900">Deposit In Progress: Fill UPI Details</div>
+                            <p class="mt-0.5 text-emerald-800">
+                                Enter your room UPI ID below and click <strong>"Save & Continue to Payment"</strong>. You will be redirected right back to the deposit screen ready to pay.
+                            </p>
+                        </div>
+                        <button type="button" @click="returnToDepositAfterUpi = false; openTopUpModal(currentUser, topUpAmount || 1000);"
+                            class="text-[11px] font-semibold underline text-emerald-800 hover:text-emerald-950 shrink-0 cursor-pointer">
+                            Return to Deposit
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <!-- Left Column: UPI Configuration Form -->
+                        <div class="lg:col-span-7 space-y-4">
+                            <!-- Card 1: My Personal Duty Account (Private to Logged-in Roommate) -->
+                            <div class="page p-5 sm:p-6 space-y-3.5 shadow-sm" style="border-left: 4px solid var(--stamp); background: #ffffff;">
+                                <div class="flex items-start justify-between gap-3 pb-3 rule-row">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="stamp-badge stamp-credit text-[9px] py-0 px-1.5">My Account Details</span>
+                                            <template x-if="myPersonalUpiId">
+                                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Duty Ready
+                                                </span>
+                                            </template>
+                                            <template x-if="!myPersonalUpiId">
+                                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Action Needed
+                                                </span>
+                                            </template>
+                                        </div>
+                                        <h3 class="font-head text-base font-bold mt-1">My Duty Room Money UPI</h3>
+                                        <p class="text-xs mt-0.5" style="color: var(--ink-soft);">
+                                            Your personal UPI address. When you are the room account holder, roommate deposits route directly here.
+                                        </p>
+                                    </div>
+                                    <button type="button" @click="openUserUpiModal()"
+                                        class="btn-ink text-xs font-semibold py-1.5 px-3 shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                        style="background: var(--stamp); color: #26200f;">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                        <span x-text="myPersonalUpiId ? 'Edit My UPI' : 'Add My UPI'"></span>
+                                    </button>
+                                </div>
+
+                                <div class="p-3 rounded-[3px] border space-y-2"
+                                    :style="myPersonalUpiId ? 'background: var(--paper-raised); border-color: var(--rule-soft);' : 'background: #fffbeb; border-color: #fcd34d;'">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="avatar" style="width:20px;height:20px;font-size:10px;"
+                                                :style="'background-color:' + getMemberColor(currentUser)"
+                                                x-text="(currentUser || 'U').charAt(0).toUpperCase()"></div>
+                                            <span class="text-xs font-bold capitalize text-slate-800" x-text="currentUser + ' (Personal Account)'"></span>
+                                        </div>
+                                        <template x-if="myPersonalUpiId">
+                                            <button type="button" @click="copyUpiId(myPersonalUpiId)"
+                                                class="text-[10px] font-semibold text-emerald-800 hover:text-emerald-950 underline flex items-center gap-1 cursor-pointer">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                Copy
+                                            </button>
+                                        </template>
+                                    </div>
+
+                                    <template x-if="myPersonalUpiId">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="font-mono text-xs font-bold text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 w-full"
+                                                x-text="myPersonalUpiId"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!myPersonalUpiId">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs text-amber-900 italic">No personal room UPI ID saved yet. Click "Add My UPI" above to add your account details.</span>
+                                        </div>
+                                    </template>
+
+                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                                        <svg class="w-3 h-3 text-emerald-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                        <span>Private to you: Other roommates cannot see or modify your personal account credentials.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Active Room Deposit Payee (Current Month) -->
+                            <div class="page p-5 sm:p-6 space-y-4">
+                                <div class="flex items-start justify-between gap-3 pb-3 rule-row">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="stamp-badge stamp-credit text-[9px] py-0 px-1.5">Active Room Payee</span>
+                                            <span class="text-[10px] font-bold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> Month: <span x-text="data.month"></span>
+                                            </span>
+                                            <template x-if="data.upi_id">
+                                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Active
+                                                </span>
+                                            </template>
+                                            <template x-if="!data.upi_id">
+                                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded">
+                                                    Not Configured
+                                                </span>
+                                            </template>
+                                        </div>
+                                        <h3 class="font-head text-base font-bold mt-1">Room Deposit Payee & Credentials</h3>
+                                        <p class="text-xs mt-0.5" style="color: var(--ink-soft);">
+                                            All roommate deposits for <strong class="font-semibold" x-text="data.month"></strong> are routed to this account.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <!-- Account Holder / Payee Name -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-[10px] font-semibold uppercase tracking-wide"
+                                                style="color: var(--ink-soft);">Room Account Holder (Payee)</label>
+                                            <template x-if="isLeaderOrAdmin()">
+                                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded">
+                                                    Holder Access · Changeable
+                                                </span>
+                                            </template>
+                                            <template x-if="!isLeaderOrAdmin()">
+                                                <span class="text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-1.5 py-0.2 rounded">
+                                                    Current Holder · Read-Only
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                        <!-- When User is the Current Account Holder (or Admin): Show Changeable Dropdown -->
+                                        <template x-if="isLeaderOrAdmin()">
+                                            <div class="relative" @click.outside="tabHolderDropdownOpen = false">
+                                                <button type="button" @click="tabHolderDropdownOpen = !tabHolderDropdownOpen"
+                                                    class="field flex items-center justify-between text-left cursor-pointer w-full bg-white hover:bg-slate-50 transition-colors">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="avatar" style="width:20px;height:20px;font-size:10px;"
+                                                            :style="'background-color:' + getMemberColor(tabHolder || data.leader || currentUser)"
+                                                            x-text="(tabHolder || data.leader || currentUser || 'R').charAt(0).toUpperCase()"></div>
+                                                        <div>
+                                                            <span class="text-xs font-bold capitalize" x-text="tabHolder || data.leader || 'Room Account'"></span>
+                                                            <span class="text-[10px] ml-1.5 font-normal text-slate-500">(Receives room UPI payments)</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-1 text-slate-500">
+                                                        <span class="text-[11px] font-semibold">Change Holder</span>
+                                                        <svg class="w-3.5 h-3.5 transition-transform" :class="tabHolderDropdownOpen ? 'rotate-180' : ''"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </div>
+                                                </button>
+
+                                                <!-- Dropdown Menu of Roommates -->
+                                                <div x-show="tabHolderDropdownOpen" x-cloak
+                                                    class="absolute left-0 right-0 mt-1 z-50 page py-1 shadow-lg border rounded-[4px] max-h-56 overflow-y-auto"
+                                                    style="background: var(--paper-raised); border-color: var(--rule-soft);">
+                                                    <template x-for="m in (data.members || [])" :key="'tab-holder-' + m">
+                                                        <div @click="tabHolder = m; tabHolderDropdownOpen = false;"
+                                                            class="px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-colors">
+                                                            <div class="flex items-center gap-2.5">
+                                                                <div class="avatar" style="width:22px;height:22px;font-size:10px;"
+                                                                    :style="'background-color:' + getMemberColor(m)"
+                                                                    x-text="m.charAt(0).toUpperCase()"></div>
+                                                                <span class="text-xs font-semibold capitalize"
+                                                                    :class="(tabHolder || data.leader) === m ? 'text-emerald-800 font-bold' : 'text-slate-800'"
+                                                                    x-text="m"></span>
+                                                                <template x-if="m === data.leader">
+                                                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">Current Leader</span>
+                                                                </template>
+                                                            </div>
+                                                            <template x-if="(tabHolder || data.leader) === m">
+                                                                <span class="text-xs text-emerald-700 font-bold flex items-center gap-1">
+                                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    Selected
+                                                                </span>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- When User is NOT the Account Holder: Show Locked Read-Only Display -->
+                                        <template x-if="!isLeaderOrAdmin()">
+                                            <div class="field flex items-center justify-between text-left" style="background: var(--paper-raised);">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="avatar" style="width:20px;height:20px;font-size:10px;"
+                                                        :style="'background-color:' + getMemberColor(data.leader || currentUser)"
+                                                        x-text="(data.leader || 'R').charAt(0).toUpperCase()"></div>
+                                                    <div>
+                                                        <span class="text-xs font-bold capitalize" x-text="data.leader || 'Room Account'"></span>
+                                                        <span class="text-[10px] ml-1.5 font-normal text-slate-500">(Receives room UPI payments)</span>
+                                                    </div>
+                                                </div>
+                                                <span class="text-[9.5px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded">Active Payee</span>
+                                            </div>
+                                        </template>
+
+                                        <p class="text-[10px] mt-1" style="color: var(--ink-faint);">
+                                            <template x-if="isLeaderOrAdmin()">
+                                                <span>You are the current account holder. You have permission to reassign the account holder or update room UPI credentials.</span>
+                                            </template>
+                                            <template x-if="!isLeaderOrAdmin()">
+                                                <span class="flex items-center gap-1 text-slate-500">
+                                                    <svg class="w-3 h-3 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                    </svg>
+                                                    Only the current account holder (<strong class="capitalize" x-text="data.leader"></strong>) can change the account holder or edit room UPI credentials.
+                                                </span>
+                                            </template>
+                                        </p>
+                                    </div>
+
+                                    <!-- UPI ID Input Field -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-[10px] font-semibold uppercase tracking-wide"
+                                                style="color: var(--ink-soft);">UPI ID / VPA Handle</label>
+                                            <template x-if="tabUpiId">
+                                                <button type="button" @click="copyUpiId(tabUpiId)"
+                                                    class="text-[10px] font-semibold text-emerald-800 hover:text-emerald-950 underline flex items-center gap-1 cursor-pointer">
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Copy ID
+                                                </button>
+                                            </template>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="text" x-model="tabUpiId"
+                                                :disabled="!isLeaderOrAdmin()"
+                                                :class="!isLeaderOrAdmin() ? 'cursor-not-allowed opacity-80' : ''"
+                                                :style="!isLeaderOrAdmin() ? 'background: var(--paper-raised);' : ''"
+                                                placeholder="e.g. yourname@okaxis, 9876543210@paytm, name@okhdfcbank"
+                                                class="field font-num text-xs font-semibold pr-8" />
+                                            <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] mt-1" style="color: var(--ink-faint);">
+                                            Supports Google Pay (@okaxis, @okhdfcbank, @oksbi), PhonePe (@ybl, @ibl), Paytm (@paytm), BHIM (@upi), and all bank handles.
+                                        </p>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="pt-3 rule-row flex items-center justify-between gap-3">
+                                        <div>
+                                            <template x-if="returnToDepositAfterUpi">
+                                                <button type="button" @click="returnToDepositAfterUpi = false; openTopUpModal(currentUser, topUpAmount || 1000);"
+                                                    class="btn-outline text-xs">
+                                                    Cancel
+                                                </button>
+                                            </template>
+                                        </div>
+                                        <template x-if="isLeaderOrAdmin()">
+                                            <button type="button" @click="submitUpiTabConfig()"
+                                                class="btn-credit text-xs flex items-center gap-1.5 font-bold shadow-xs">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span x-text="returnToDepositAfterUpi ? 'Save & Continue to Payment →' : 'Save UPI Credentials'"></span>
+                                            </button>
+                                        </template>
+                                        <template x-if="!isLeaderOrAdmin()">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[11px] text-slate-500 italic flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                    </svg>
+                                                    View-only mode
+                                                </span>
+                                                <template x-if="returnToDepositAfterUpi">
+                                                    <button type="button" @click="returnToDepositAfterUpi = false; openTopUpModal(currentUser, topUpAmount || 1000);"
+                                                        class="btn-credit text-xs">
+                                                        Return to Deposit →
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Live Payment QR Preview & Supported Apps -->
+                        <div class="lg:col-span-5 space-y-4">
+                            <div class="page p-5 sm:p-6 space-y-4 text-center">
+                                <div class="pb-2.5 rule-row text-left">
+                                    <span class="text-[10px] font-num uppercase tracking-widest font-semibold" style="color: var(--ink-soft);">Live QR Preview</span>
+                                    <h4 class="font-head text-sm font-bold mt-0.5">Instant Deposit Scanner</h4>
+                                </div>
+
+                                <template x-if="tabUpiId && tabUpiId.includes('@')">
+                                    <div>
+                                        <div class="bg-white p-3 rounded border border-slate-200 shadow-sm inline-block mx-auto">
+                                            <img :src="getTabUpiQrCodeUrl(1000)"
+                                                alt="Live UPI QR Code" class="w-40 h-40 object-contain mx-auto block" />
+                                        </div>
+                                        <div class="mt-2 text-xs font-bold text-slate-800">
+                                            Ready for Scan & Pay
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 mt-0.5 font-num">
+                                            <span class="capitalize font-semibold text-slate-700" x-text="tabHolder || data.leader || 'Room Account'"></span> · <span x-text="tabUpiId"></span>
+                                        </p>
+                                    </div>
+                                </template>
+
+                                <template x-if="!tabUpiId || !tabUpiId.includes('@')">
+                                    <div class="p-6 border border-dashed rounded text-center" style="border-color: var(--rule-soft); color: var(--ink-faint);">
+                                        <svg class="w-10 h-10 mx-auto text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                        </svg>
+                                        <p class="text-xs font-semibold text-slate-700">QR Code Inactive</p>
+                                        <p class="text-[11px] mt-1">Enter a valid UPI ID to generate payment QR code.</p>
+                                    </div>
+                                </template>
+
+                                <div class="pt-3 rule-row text-left space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--ink-soft);">Compatible Payment Apps</span>
+                                        <span class="text-[10px] text-slate-400 font-num">Direct UPI</span>
+                                    </div>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <!-- Google Pay Logo -->
+                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="Google Pay">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-6 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                            <svg class="hidden h-6 w-auto max-w-full" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M22.7 20.3c0-.7-.1-1.4-.2-2h-8.7v3.8h5c-.2 1.2-.9 2.2-1.9 2.8v2.4h3.1c1.8-1.7 2.7-4.1 2.7-7z" fill="#4285F4"/>
+                                                <path d="M13.8 29.3c2.5 0 4.6-.8 6.2-2.3l-3.1-2.4c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H5.5v2.5c1.6 3.1 4.7 5.1 8.3 5.1z" fill="#34A853"/>
+                                                <path d="M8.7 22.3c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V15.8H5.5c-.7 1.3-1 2.8-1 4.2s.4 2.9 1 4.2l3.2-2.4z" fill="#FBBC04"/>
+                                                <path d="M13.8 14.5c1.4 0 2.6.5 3.6 1.4l2.7-2.7C18.4 11.6 16.3 11 13.8 11c-3.6 0-6.7 2-8.3 5.1l3.2 2.5c.7-2.2 2.7-3.8 5.1-3.8z" fill="#EA4335"/>
+                                                <path d="M35 11h-4.5v18h3.3v-5.5H35c3.5 0 6.3-2.8 6.3-6.2 0-3.5-2.8-6.3-6.3-6.3zm0 9.2h-1.2v-6h1.2c1.7 0 3 1.3 3 3s-1.3 3-3 3z" fill="#5F6368"/>
+                                                <path d="M48.2 16.5c-2.3 0-4.2 1.7-4.2 4.1 0 2.5 1.9 4.2 4.2 4.2 1 0 1.9-.4 2.6-1.1v1h3.1V17h-3.1v1.1c-.7-.9-1.6-1.6-2.6-1.6zm.5 6.3c-1.3 0-2.3-1-2.3-2.2 0-1.2 1-2.2 2.3-2.2 1.2 0 2.2 1 2.2 2.2 0 1.2-1 2.2-2.2 2.2z" fill="#5F6368"/>
+                                                <path d="M62.6 17l-3.7 9.5h-3.4l1.4-3.1-2.4-6.4h3.5l1.2 3.6 1.2-3.6h2.2z" fill="#5F6368"/>
+                                            </svg>
+                                        </div>
+                                        <!-- PhonePe Logo -->
+                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="PhonePe">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-8 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                            <svg class="hidden h-7 w-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect width="48" height="48" rx="10" fill="#5F259F"/>
+                                                <path d="M13 13.5h22v3.2H13z" fill="#FFFFFF"/>
+                                                <path d="M22 13.5l4.2-6.5h3.6l-5 6.5z" fill="#FFFFFF"/>
+                                                <path d="M29 13.5v19h-3.8v-5.2c-1.3 1.8-3.4 2.7-5.8 2.7-4.2 0-7.4-3.2-7.4-7.5v-9h3.8v8.6c0 2.3 1.7 4 4 4 2.3 0 4-1.7 4-4v-8.6H29z" fill="#FFFFFF"/>
+                                                <path d="M22.5 29.5l4.8 6.5h-4.8l-3.2-4.5z" fill="#FFFFFF"/>
+                                            </svg>
+                                        </div>
+                                        <!-- Paytm Logo -->
+                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="Paytm">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                            <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 105 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 6H5v22h4.5v-6.8h2.5c4.6 0 8-3.2 8-7.6S16.6 6 12 6zm0 10.8H9.5v-6.4H12c2.3 0 3.8 1.4 3.8 3.2s-1.5 3.2-3.8 3.2z" fill="#002970"/>
+                                                <path d="M28 13.8c-3.6 0-6.2 2.7-6.2 6.5s2.6 6.5 6.2 6.5c2.1 0 3.7-.8 4.7-2.1v1.8h4.2V14.2h-4.2v1.7c-1-1.3-2.6-2.1-4.7-2.1zm.8 9.5c-1.8 0-3.1-1.3-3.1-3s1.3-3 3.1-3 3.1 1.3 3.1 3-1.3 3-3.1 3z" fill="#002970"/>
+                                                <path d="M47.3 14.2l-4.5 13.5h-4.6l1.8-4.5-4-9h4.8l2.2 5.5 2.1-5.5h2.2z" fill="#002970"/>
+                                                <path d="M57.5 9.5h-4V6H49v3.5h-3v4h3v9.5c0 3.5 2 5 5.5 5h3V24h-2c-1.2 0-2-.5-2-2v-8.5h4v-4z" fill="#00BAF2"/>
+                                                <path d="M83.5 13.8c-2 0-3.6.9-4.5 2.3-.8-1.4-2.4-2.3-4.3-2.3-1.8 0-3.2.8-4 2v-1.6h-4.2V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-8.6c0-3.5-2.2-5.6-5.5-5.6z" fill="#00BAF2"/>
+                                            </svg>
+                                        </div>
+                                        <!-- BHIM / UPI Logo -->
+                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="BHIM UPI & Banks">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                            <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 100 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 7h8l14 20h-8z" fill="#097939"/>
+                                                <path d="M26 7h8l-14 20h-8z" fill="#ED752E"/>
+                                                <path d="M48 8h5v11.5c0 3.2-2 5.5-5.5 5.5s-5.5-2.3-5.5-5.5V8h5v11.5c0 1 .5 1.7 1.5 1.7s1.5-.7 1.5-1.7V8z" fill="#1C3F60"/>
+                                                <path d="M60 8h6.5c3.5 0 6 2.3 6 5.5s-2.5 5.5-6 5.5H64v6H60V8zm4 7.2h2.2c1.2 0 2.2-.7 2.2-1.7s-1-1.7-2.2-1.7H64v3.4z" fill="#1C3F60"/>
+                                                <path d="M78 8h5v17h-5V8z" fill="#1C3F60"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dedicated 12-Month Rotation Schedule Tab (Authentic Calendar UI) -->
+                <div x-show="currentTab === 'schedule'" class="space-y-3.5">
+                    <div class="page p-4 sm:p-5 space-y-4 shadow-sm" style="background: var(--paper-raised); border: 1px solid var(--rule); border-left: 4px solid var(--spine);">
+                        <!-- Calendar Header Bar -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 rule-row">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-[3px] flex items-center justify-center shrink-0"
+                                    style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-head text-base sm:text-lg font-bold leading-tight" style="color: var(--ink);">12-Month Rotation Calendar</h3>
+                                    <p class="text-[11px]" style="color: var(--ink-soft);">
+                                        Automated monthly cycle designating room account holder and deposit payee
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Top Actions & Current Active Badge -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Active Month Pill -->
+                                <div class="stamp-badge stamp-credit text-xs py-1 px-3 font-bold shadow-2xs shrink-0 whitespace-nowrap" style="transform:none;">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                    <span>Active: <strong class="capitalize font-bold" x-text="(data.month || 'September') + ' (' + (data.leader || 'madhu') + ')'"></strong></span>
+                                </div>
+
+                                <template x-if="isAdmin">
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" @click="openSwapModal()"
+                                            class="btn-outline text-xs flex items-center gap-1 py-1 px-2.5 font-semibold cursor-pointer shadow-xs"
+                                            style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
+                                            <svg class="w-3.5 h-3.5" style="color: var(--ink-soft);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                            </svg>
+                                            <span>Swap</span>
+                                        </button>
+                                        <button type="button" @click="resetRotationSchedule()"
+                                            class="btn-outline text-xs flex items-center gap-1 py-1 px-2.5 cursor-pointer shadow-xs"
+                                            style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink-soft);"
+                                            title="Reset to default sequence">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            <span>Reset</span>
+                                        </button>
+                                        <a href="/admin" class="btn-ink text-xs py-1 px-2.5 font-bold cursor-pointer shadow-xs"
+                                            style="background: var(--spine); color: #ffffff;">
+                                            Admin Console ↗
+                                        </a>
+                                    </div>
+                                </template>
+
+                                <template x-if="!isAdmin">
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <span class="text-[10.5px] px-2 py-1 rounded font-medium flex items-center gap-1 shrink-0 whitespace-nowrap"
+                                            style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule);">
+                                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                            </svg>
+                                            Admin Governed
+                                        </span>
+                                        <button type="button" @click="goToUpiTab(false)"
+                                            class="btn-ink text-xs py-1 px-2.5 font-semibold flex items-center gap-1 shadow-xs cursor-pointer shrink-0 whitespace-nowrap"
+                                            style="background: var(--credit); color: #ffffff;">
+                                            <span>UPI Payee →</span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+
+                        <!-- 12-Month Schedule Table with Authentic Passbook Styling -->
+                        <div class="overflow-hidden rounded-[3px] shadow-2xs" style="background: var(--paper-raised); border: 1px solid var(--rule);">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs min-w-[700px] border-collapse">
+                                    <thead>
+                                        <tr class="text-[10.5px] font-bold uppercase tracking-wider font-head"
+                                            style="background: var(--paper); border-bottom: 1.5px solid var(--rule); color: var(--ink-soft);">
+                                            <th class="py-3 px-4 w-20 text-center font-num shrink-0 whitespace-nowrap">Turn #</th>
+                                            <th class="py-3 px-4 min-w-[170px] shrink-0 whitespace-nowrap">Calendar Month</th>
+                                            <th class="py-3 px-4 min-w-[240px]">Designated Account Holder</th>
+                                            <th class="py-3 px-4 min-w-[150px] shrink-0 whitespace-nowrap">Rotation Status</th>
+                                            <th class="py-3 px-4 text-right min-w-[140px] shrink-0 whitespace-nowrap">Governance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y" style="border-color: var(--rule-soft);">
+                                        <template x-for="(monthName, mIdx) in getOrderedScheduleMonths()" :key="'sched-row-' + monthName">
+                                            <tr class="transition-colors"
+                                                :style="(data.month === monthName) 
+                                                    ? 'background: var(--credit-bg); border-left: 4px solid var(--credit);' 
+                                                    : 'background: var(--paper-raised);'"
+                                                :class="(data.month !== monthName) ? 'hover:bg-[#ebe5d5]/60' : ''">
+                                                
+                                                <!-- Cycle / Turn Identifier (M1, M2... M12) -->
+                                                <td class="py-3.5 px-4 text-center shrink-0 whitespace-nowrap">
+                                                    <span class="inline-flex items-center justify-center font-num text-xs font-bold px-2.5 py-1 rounded shrink-0 whitespace-nowrap shadow-2xs"
+                                                        :style="(data.month === monthName) 
+                                                            ? 'background: var(--credit); color: #ffffff;' 
+                                                            : 'background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule);'"
+                                                        x-text="'M' + (mIdx + 1)"></span>
+                                                </td>
+
+                                                <!-- Calendar Month Name with Perfectly Sized Active Now Badge -->
+                                                <td class="py-3.5 px-4 shrink-0 whitespace-nowrap">
+                                                    <div class="flex items-center gap-2.5 shrink-0 whitespace-nowrap">
+                                                        <span class="text-sm font-bold capitalize shrink-0 whitespace-nowrap"
+                                                            :style="(data.month === monthName) ? 'color: var(--credit); font-weight: 700;' : 'color: var(--ink);'"
+                                                            x-text="monthName"></span>
+                                                        <template x-if="data.month === monthName">
+                                                            <span class="stamp-badge stamp-credit text-[10px] py-0.5 px-2 font-bold shrink-0 whitespace-nowrap shadow-xs" style="transform:none;">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                                                Active Now
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Designated Room Account Holder -->
+                                                <td class="py-3.5 px-4">
+                                                    <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
+                                                        <div class="avatar shrink-0 font-bold shadow-2xs" style="width:28px;height:28px;font-size:11px;"
+                                                            :style="'background-color:' + getMemberColor(getMonthHolder(monthName))"
+                                                            x-text="getMonthHolder(monthName).charAt(0).toUpperCase()"></div>
+                                                        <div class="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                                                            <span class="text-xs font-bold capitalize shrink-0 whitespace-nowrap" style="color: var(--ink);" x-text="getMonthHolder(monthName)"></span>
+                                                            <span class="stamp-badge text-[9.5px] py-0.5 px-2 font-semibold shrink-0 whitespace-nowrap"
+                                                                style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule); transform:none;">
+                                                                Account Holder
+                                                            </span>
+                                                            <template x-if="data.month === monthName">
+                                                                <span class="stamp-badge stamp-credit text-[9.5px] py-0.5 px-2 font-bold shrink-0 whitespace-nowrap shadow-2xs" style="transform:none;">
+                                                                    <span>⚡</span> Holds Fund Now
+                                                                </span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Status -->
+                                                <td class="py-3.5 px-4 shrink-0 whitespace-nowrap">
+                                                    <template x-if="data.month === monthName">
+                                                        <span class="stamp-badge stamp-credit text-[10.5px] py-1 px-3 font-bold shrink-0 whitespace-nowrap shadow-xs" style="transform:none;">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                                            Active Now
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="data.month !== monthName">
+                                                        <span class="stamp-badge text-[10.5px] py-1 px-2.5 font-medium shrink-0 whitespace-nowrap shadow-2xs"
+                                                            style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule); transform:none;">
+                                                            Scheduled Turn
+                                                        </span>
+                                                    </template>
+                                                </td>
+
+                                                <!-- Governance & Actions -->
+                                                <td class="py-3.5 px-4 text-right shrink-0 whitespace-nowrap">
+                                                    <template x-if="isAdmin">
+                                                        <div class="relative inline-flex items-center gap-1.5 justify-end shrink-0 whitespace-nowrap" @click.outside="monthDropdownOpen = (monthDropdownOpen === monthName ? null : monthDropdownOpen)">
+                                                            <button type="button" @click="monthDropdownOpen = (monthDropdownOpen === monthName ? null : monthName)"
+                                                                class="btn-outline text-xs font-bold py-1 px-2.5 flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
+                                                                style="color: var(--ink); border: 1px solid var(--rule); background: var(--paper);">
+                                                                <span>Assign</span>
+                                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                                </svg>
+                                                            </button>
+                                                            <button type="button" @click="openSwapModal(monthName)"
+                                                                class="p-1 rounded cursor-pointer shrink-0 hover:bg-[var(--paper)] transition-colors"
+                                                                style="color: var(--ink-soft);"
+                                                                title="Swap month turn">
+                                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                                </svg>
+                                                            </button>
+                                                            <div x-show="monthDropdownOpen === monthName" x-cloak
+                                                                class="absolute right-0 top-full mt-1 z-30 rounded shadow-lg py-1 w-36 max-h-48 overflow-y-auto text-left"
+                                                                style="background: var(--paper-raised); border: 1px solid var(--rule);">
+                                                                <div class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider border-b"
+                                                                    style="color: var(--ink-faint); border-color: var(--rule-soft);">
+                                                                    Select Holder
+                                                                </div>
+                                                                <template x-for="m in (data.members || [])" :key="'assign-row-' + monthName + '-' + m">
+                                                                    <button type="button" @click="assignMonthHolder(monthName, m)"
+                                                                        class="w-full px-2.5 py-1.5 flex items-center justify-between text-xs hover:bg-[var(--paper)] text-left capitalize cursor-pointer">
+                                                                        <span :class="getMonthHolder(monthName) === m ? 'font-bold' : ''"
+                                                                            :style="getMonthHolder(monthName) === m ? 'color: var(--credit);' : 'color: var(--ink);'"
+                                                                            x-text="m"></span>
+                                                                        <template x-if="getMonthHolder(monthName) === m">
+                                                                            <span style="color: var(--credit);" class="font-bold">✓</span>
+                                                                        </template>
+                                                                    </button>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="!isAdmin">
+                                                        <span class="stamp-badge stamp-credit text-[10px] py-1 px-2.5 font-semibold shrink-0 whitespace-nowrap shadow-2xs"
+                                                            style="transform:none;">
+                                                            <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                            </svg>
+                                                            Auto-Synced
+                                                        </span>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Minimal Passbook Footer -->
+                            <div class="py-2.5 px-4 text-center text-[11px] font-num"
+                                style="background: var(--paper); border-top: 1px solid var(--rule); color: var(--ink-soft);">
+                                Automated 12-Month Calendar · Managed exclusively by Administrator in Admin Account
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -2117,6 +2877,15 @@
                                 required>
                         </div>
                         <div>
+                            <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1"
+                                style="color: var(--ink-soft);">Room Account UPI ID (for instant payments)</label>
+                            <input type="text" x-model="newUpiId" placeholder="e.g. 9876543210@upi or roomholder@okaxis"
+                                class="field font-num text-xs">
+                            <p class="text-[10px] mt-1" style="color: var(--ink-faint);">
+                                When set, roommates see one-tap UPI pay buttons and QR codes to deposit directly into this account.
+                            </p>
+                        </div>
+                        <div>
                             <div class="mb-1">
                                 <label class="block text-[10px] font-semibold uppercase tracking-wide"
                                     style="color: var(--ink-soft);">Active Roommates</label>
@@ -2280,6 +3049,185 @@
                                 class="field text-xs">
                         </div>
 
+                        <!-- Responsive UPI Payment Block (Automatic QR on Laptop / 1-Click App Buttons with Logos on Mobile) -->
+                        <div class="p-3.5 rounded-[3px] border space-y-3"
+                            style="background: var(--paper-raised); border-color: var(--rule-soft);">
+                            
+                            <!-- Header -->
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
+                                    style="color: var(--credit);">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    UPI Payment
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <template x-if="data.upi_id">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[10px] font-num font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                <span x-text="data.upi_id"></span>
+                                            </span>
+                                            <template x-if="isLeaderOrAdmin()">
+                                                <button type="button" @click="goToUpiTab(true)"
+                                                    class="text-[10px] font-semibold underline text-slate-600 hover:text-slate-900 cursor-pointer">
+                                                    Edit
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <template x-if="data.upi_id">
+                                <div class="space-y-3">
+                                    <!-- DESKTOP / LAPTOP DISPLAY: Automatic High-Res QR Code for Phone Scanning -->
+                                    <div class="hidden md:block">
+                                        <div class="p-3.5 rounded border text-center flex flex-col items-center bg-white shadow-xs"
+                                            style="border-color: var(--rule-soft);">
+                                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm inline-block">
+                                                <img :src="getUpiQrCodeUrl(topUpAmount, isLeaderOrAdmin() ? topUpMember : currentUser, topUpNote)"
+                                                    alt="Scan UPI QR Code" class="w-48 h-48 object-contain mx-auto block" />
+                                            </div>
+                                            <p class="text-xs font-bold text-slate-800 mt-2.5 flex items-center justify-center gap-1.5">
+                                                <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                Scan with phone camera or UPI app to pay ₹<span class="font-num font-bold" x-text="Number(topUpAmount || 0).toLocaleString()"></span>
+                                            </p>
+                                            <p class="text-[10px] text-slate-500 mt-0.5">
+                                                Compatible with Google Pay, PhonePe, Paytm, BHIM, or banking apps
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1-Click Direct Launch with Official App Logos (Icon-only) -->
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-[11px] font-medium" style="color: var(--ink-soft);">
+                                                Pay directly via UPI app <strong class="font-num text-slate-900">₹<span x-text="Number(topUpAmount || 0).toLocaleString()"></span></strong>:
+                                            </p>
+                                            <span class="text-[10px] text-slate-400">Tap icon to open</span>
+                                        </div>
+
+                                        <div class="grid grid-cols-4 gap-2">
+                                            <!-- Google Pay Button -->
+                                            <button type="button" @click="launchUpiApp('gpay')"
+                                                class="h-12 sm:h-13 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-2 transition-all shadow-xs cursor-pointer"
+                                                title="Google Pay" aria-label="Google Pay">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-6 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                                <svg class="hidden h-6 w-auto max-w-full" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M22.7 20.3c0-.7-.1-1.4-.2-2h-8.7v3.8h5c-.2 1.2-.9 2.2-1.9 2.8v2.4h3.1c1.8-1.7 2.7-4.1 2.7-7z" fill="#4285F4"/>
+                                                    <path d="M13.8 29.3c2.5 0 4.6-.8 6.2-2.3l-3.1-2.4c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H5.5v2.5c1.6 3.1 4.7 5.1 8.3 5.1z" fill="#34A853"/>
+                                                    <path d="M8.7 22.3c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V15.8H5.5c-.7 1.3-1 2.8-1 4.2s.4 2.9 1 4.2l3.2-2.4z" fill="#FBBC04"/>
+                                                    <path d="M13.8 14.5c1.4 0 2.6.5 3.6 1.4l2.7-2.7C18.4 11.6 16.3 11 13.8 11c-3.6 0-6.7 2-8.3 5.1l3.2 2.5c.7-2.2 2.7-3.8 5.1-3.8z" fill="#EA4335"/>
+                                                    <path d="M35 11h-4.5v18h3.3v-5.5H35c3.5 0 6.3-2.8 6.3-6.2 0-3.5-2.8-6.3-6.3-6.3zm0 9.2h-1.2v-6h1.2c1.7 0 3 1.3 3 3s-1.3 3-3 3z" fill="#5F6368"/>
+                                                    <path d="M48.2 16.5c-2.3 0-4.2 1.7-4.2 4.1 0 2.5 1.9 4.2 4.2 4.2 1 0 1.9-.4 2.6-1.1v1h3.1V17h-3.1v1.1c-.7-.9-1.6-1.6-2.6-1.6zm.5 6.3c-1.3 0-2.3-1-2.3-2.2 0-1.2 1-2.2 2.3-2.2 1.2 0 2.2 1 2.2 2.2 0 1.2-1 2.2-2.2 2.2z" fill="#5F6368"/>
+                                                    <path d="M62.6 17l-3.7 9.5h-3.4l1.4-3.1-2.4-6.4h3.5l1.2 3.6 1.2-3.6h2.2z" fill="#5F6368"/>
+                                                </svg>
+                                            </button>
+
+                                            <!-- PhonePe Button -->
+                                            <button type="button" @click="launchUpiApp('phonepe')"
+                                                class="h-12 sm:h-13 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-2 transition-all shadow-xs cursor-pointer"
+                                                title="PhonePe" aria-label="PhonePe">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-8 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                                <svg class="hidden h-7 w-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect width="48" height="48" rx="10" fill="#5F259F"/>
+                                                    <path d="M13 13.5h22v3.2H13z" fill="#FFFFFF"/>
+                                                    <path d="M22 13.5l4.2-6.5h3.6l-5 6.5z" fill="#FFFFFF"/>
+                                                    <path d="M29 13.5v19h-3.8v-5.2c-1.3 1.8-3.4 2.7-5.8 2.7-4.2 0-7.4-3.2-7.4-7.5v-9h3.8v8.6c0 2.3 1.7 4 4 4 2.3 0 4-1.7 4-4v-8.6H29z" fill="#FFFFFF"/>
+                                                    <path d="M22.5 29.5l4.8 6.5h-4.8l-3.2-4.5z" fill="#FFFFFF"/>
+                                                </svg>
+                                            </button>
+
+                                            <!-- Paytm Button -->
+                                            <button type="button" @click="launchUpiApp('paytm')"
+                                                class="h-12 sm:h-13 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-2 transition-all shadow-xs cursor-pointer"
+                                                title="Paytm" aria-label="Paytm">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                                <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 105 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 6H5v22h4.5v-6.8h2.5c4.6 0 8-3.2 8-7.6S16.6 6 12 6zm0 10.8H9.5v-6.4H12c2.3 0 3.8 1.4 3.8 3.2s-1.5 3.2-3.8 3.2z" fill="#002970"/>
+                                                    <path d="M28 13.8c-3.6 0-6.2 2.7-6.2 6.5s2.6 6.5 6.2 6.5c2.1 0 3.7-.8 4.7-2.1v1.8h4.2V14.2h-4.2v1.7c-1-1.3-2.6-2.1-4.7-2.1zm.8 9.5c-1.8 0-3.1-1.3-3.1-3s1.3-3 3.1-3 3.1 1.3 3.1 3-1.3 3-3.1 3z" fill="#002970"/>
+                                                    <path d="M47.3 14.2l-4.5 13.5h-4.6l1.8-4.5-4-9h4.8l2.2 5.5 2.1-5.5h2.2z" fill="#002970"/>
+                                                    <path d="M57.5 9.5h-4V6H49v3.5h-3v4h3v9.5c0 3.5 2 5 5.5 5h3V24h-2c-1.2 0-2-.5-2-2v-8.5h4v-4z" fill="#00BAF2"/>
+                                                    <path d="M83.5 13.8c-2 0-3.6.9-4.5 2.3-.8-1.4-2.4-2.3-4.3-2.3-1.8 0-3.2.8-4 2v-1.6h-4.2V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-8.6c0-3.5-2.2-5.6-5.5-5.6z" fill="#00BAF2"/>
+                                                </svg>
+                                            </button>
+
+                                            <!-- BHIM / Any UPI App Button -->
+                                            <button type="button" @click="launchUpiApp('all')"
+                                                class="h-12 sm:h-13 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex items-center justify-center p-2 transition-all shadow-xs cursor-pointer"
+                                                title="BHIM & UPI Banks" aria-label="BHIM UPI">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+                                                <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 100 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 7h8l14 20h-8z" fill="#097939"/>
+                                                    <path d="M26 7h8l-14 20h-8z" fill="#ED752E"/>
+                                                    <path d="M48 8h5v11.5c0 3.2-2 5.5-5.5 5.5s-5.5-2.3-5.5-5.5V8h5v11.5c0 1 .5 1.7 1.5 1.7s1.5-.7 1.5-1.7V8z" fill="#1C3F60"/>
+                                                    <path d="M60 8h6.5c3.5 0 6 2.3 6 5.5s-2.5 5.5-6 5.5H64v6H60V8zm4 7.2h2.2c1.2 0 2.2-.7 2.2-1.7s-1-1.7-2.2-1.7H64v3.4z" fill="#1C3F60"/>
+                                                    <path d="M78 8h5v17h-5V8z" fill="#1C3F60"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Redirection Feedback Banner -->
+                                    <div x-show="upiRedirected" x-cloak class="p-2.5 rounded bg-emerald-50 border border-emerald-300 text-[11px] text-emerald-900 flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div>
+                                            <span class="font-bold">Payment initiated!</span> After completing the payment in your UPI app, click <strong>"Confirm deposit"</strong> below to record it in the passbook.
+                                        </div>
+                                    </div>
+
+                                    <!-- Payee Verification & Copy Button -->
+                                    <div class="flex items-center justify-between pt-1 border-t text-[10px]" style="border-color: var(--rule-soft); color: var(--ink-faint);">
+                                        <span>Payee: <strong class="capitalize" x-text="data.leader || 'Room Account'"></strong> (<span class="font-num" x-text="data.upi_id"></span>)</span>
+                                        <button type="button" @click="copyUpiId(data.upi_id)"
+                                            class="font-semibold text-emerald-800 hover:text-emerald-900 underline flex items-center gap-1 cursor-pointer">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            Copy ID
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="!data.upi_id">
+                                <div class="p-3 rounded border bg-amber-50/70 border-amber-200 text-xs space-y-2">
+                                    <div class="flex items-center gap-1.5 text-amber-900 font-semibold">
+                                        <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <span>No UPI credentials added yet</span>
+                                    </div>
+                                    <template x-if="isLeaderOrAdmin()">
+                                        <div>
+                                            <p class="text-[11px] text-amber-800 leading-relaxed">
+                                                Add the room's UPI ID so roommates can scan high-res QR codes on laptop or tap official app buttons on mobile.
+                                            </p>
+                                            <button type="button" @click="goToUpiTab(true)"
+                                                class="btn-credit text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm font-semibold cursor-pointer w-full justify-center mt-2">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                                <span>Add UPI Credentials →</span>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="!isLeaderOrAdmin()">
+                                        <p class="text-[11px] text-amber-800 leading-relaxed">
+                                            Please ask the current room account holder (<strong class="capitalize" x-text="data.leader"></strong>) to add the room UPI details.
+                                        </p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
                         <div class="pt-3 flex items-center justify-end gap-2 rule-row">
                             <button type="button" @click="showTopUpModal = false"
                                 class="btn-outline text-xs">Cancel</button>
@@ -2365,9 +3313,187 @@
             </div>
         </div>
 
+        <!-- Month Swap Modal -->
+        <div x-show="showSwapModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3"
+            style="background: rgba(20,20,15,.6);">
+            <div @click.away="showSwapModal = false" class="slip w-full max-w-md overflow-hidden"
+                style="border-style: solid;">
+                <div class="perforation"></div>
+                <div class="p-5 space-y-4">
+                    <div class="flex items-center justify-between pb-3 rule-row">
+                        <div>
+                            <span class="text-[10px] font-num uppercase tracking-widest text-indigo-800 font-bold">Schedule Adjustment</span>
+                            <h3 class="font-head text-base font-bold">Swap Monthly Account Holders</h3>
+                        </div>
+                        <button type="button" @click="showSwapModal = false"
+                            class="text-slate-400 hover:text-slate-800 text-lg font-bold leading-none cursor-pointer">×</button>
+                    </div>
 
+                    <p class="text-xs text-slate-600">
+                        Exchange turns between any two calendar months. For instance, swap October (<span class="font-bold capitalize" x-text="getMonthHolder(swapMonthA)"></span>) with November (<span class="font-bold capitalize" x-text="getMonthHolder(swapMonthB)"></span>).
+                    </p>
 
-    </div>
+                    <div class="space-y-3 pt-1">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                            <!-- Month A -->
+                            <div>
+                                <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">First Month</label>
+                                <select x-model="swapMonthA" class="field w-full text-xs font-semibold">
+                                    <template x-for="m in calendarMonths" :key="'swap-a-' + m">
+                                        <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Month B -->
+                            <div>
+                                <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Second Month</label>
+                                <select x-model="swapMonthB" class="field w-full text-xs font-semibold">
+                                    <template x-for="m in calendarMonths" :key="'swap-b-' + m">
+                                        <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Live Preview Banner -->
+                        <div class="p-3 rounded bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-950 space-y-1">
+                            <div class="font-bold text-indigo-900">
+                                <span>Preview Swap Result:</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs pt-1">
+                                <div>
+                                    <span class="font-semibold text-slate-700" x-text="swapMonthA"></span>: 
+                                    <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthB)"></span>
+                                </div>
+                                <span class="text-indigo-400 font-bold px-1">⇄</span>
+                                <div>
+                                    <span class="font-semibold text-slate-700" x-text="swapMonthB"></span>: 
+                                    <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthA)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 flex items-center justify-end gap-2 rule-row">
+                        <button type="button" @click="showSwapModal = false" class="btn-outline text-xs cursor-pointer">Cancel</button>
+                        <button type="button" @click="submitSwapMonths()" class="btn-ink text-xs font-bold bg-indigo-700 hover:bg-indigo-800 text-white flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Confirm Swap
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Duty Room Money UPI Setup Modal -->
+        <div x-show="showUserUpiModal" x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 no-print"
+            style="background: rgba(18, 22, 25, 0.75); backdrop-filter: blur(4px);">
+            <div @click.outside="if (!userUpiSaving) showUserUpiModal = false"
+                class="page w-full max-w-md p-5 sm:p-6 shadow-2xl relative border rounded-[4px] space-y-4"
+                style="background: var(--paper-raised); border-color: var(--rule);">
+                
+                <!-- Header -->
+                <div class="flex items-start justify-between gap-3 pb-3 border-b" style="border-color: var(--rule-soft);">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-[4px] flex items-center justify-center text-emerald-900 bg-emerald-100 border border-emerald-300 shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded border border-emerald-200">
+                                Account Holder Duty Setup
+                            </span>
+                            <h3 class="font-head text-lg font-bold text-slate-900 mt-0.5">
+                                Add Duty Account Details
+                            </h3>
+                        </div>
+                    </div>
+                    <button type="button" @click="showUserUpiModal = false; userUpiModalDismissed = true;"
+                        class="text-slate-400 hover:text-slate-600 p-1 rounded transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Explanation -->
+                <div class="p-3.5 rounded-[3px] text-xs space-y-2 border"
+                    style="background: rgba(31,111,84,0.06); border-color: rgba(31,111,84,0.25); color: #164e3b;">
+                    <div class="font-bold flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        <span>Personal Duty Account for <strong class="capitalize" x-text="currentUser"></strong></span>
+                    </div>
+                    <p class="text-[11.5px] leading-relaxed text-slate-700">
+                        Please add your personal UPI address. When your monthly rotation arrives to be the <strong>Room Account Holder</strong>, all roommates' monthly deposits will automatically route to this UPI address so you can maintain the room money.
+                    </p>
+                    <div class="text-[10px] text-slate-500 pt-1.5 flex items-center gap-1.5 border-t border-emerald-200/60">
+                        <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span>Private & Separate: Your details are strictly confidential and never displayed to other roommates.</span>
+                    </div>
+                </div>
+
+                <!-- Error message if any -->
+                <div x-show="userUpiError" x-cloak class="p-2.5 rounded-[3px] text-xs flex items-center gap-2 border bg-rose-50 border-rose-200 text-rose-800">
+                    <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span x-text="userUpiError" class="font-medium"></span>
+                </div>
+
+                <!-- UPI Input Form -->
+                <form @submit.prevent="submitSaveUserUpi()" class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-700 mb-1">
+                            Your UPI ID / VPA Handle
+                        </label>
+                        <div class="relative">
+                            <input type="text" x-model="userUpiInput" required
+                                placeholder="e.g. yourname@okaxis, 9876543210@ybl, name@okhdfcbank"
+                                class="field font-num text-xs font-semibold pr-8"
+                                style="background: #ffffff;" />
+                            <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-[10px] mt-1 text-slate-500">
+                            Compatible with Google Pay, PhonePe, Paytm, BHIM, and all bank UPI handles.
+                        </p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="pt-3 border-t flex items-center justify-between gap-2" style="border-color: var(--rule-soft);">
+                        <button type="button" @click="showUserUpiModal = false; userUpiModalDismissed = true;"
+                            class="btn-outline text-xs cursor-pointer">
+                            Remind Me Later
+                        </button>
+                        <button type="submit" :disabled="userUpiSaving"
+                            class="btn-ink text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
+                            <template x-if="userUpiSaving">
+                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!userUpiSaving">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </template>
+                            <span x-text="userUpiSaving ? 'Saving...' : 'Save Account Details'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
     <script>
         // Automatic Authorization & Cookie Session Interceptor
@@ -2393,6 +3519,7 @@
                 authenticated: false,
                 authChecking: true,
                 currentUser: '',
+                isAdmin: false,
                 loginUsername: '',
                 loginPassword: '',
                 loginMode: 'login',
@@ -2408,6 +3535,13 @@
                 changePasswordMsg: '',
                 changePasswordLoading: false,
 
+                showUserUpiModal: false,
+                myPersonalUpiId: '',
+                userUpiInput: '',
+                userUpiModalDismissed: false,
+                userUpiSaving: false,
+                userUpiError: '',
+
                 mobileSidebarOpen: false,
 
                 currentTab: 'dashboard',
@@ -2415,9 +3549,9 @@
 
                 data: {
                     month: 'September',
-                    leader: 'yashwanth',
+                    leader: 'madhu',
                     base_amount: 1000.0,
-                    members: ['yashwanth', 'madhu', 'siva', 'satya', 'manohar'],
+                    members: ['madhu', 'satya', 'siva', 'manohar', 'yashwanth'],
                     base_payments: {},
                     expenses: [],
                     pool_deposits: []
@@ -2433,6 +3567,10 @@
                 showExpenseModal: false,
                 showSetupModal: false,
                 showTopUpModal: false,
+                showSwapModal: false,
+                swapMonthA: 'October',
+                swapMonthB: 'November',
+                monthDropdownOpen: null,
                 payerDropdownOpen: false,
                 leaderDropdownOpen: false,
                 topUpDropdownOpen: false,
@@ -2458,6 +3596,14 @@
                 newAutoCalendar: true,
                 newLeader: '',
                 newBaseAmount: 1000,
+                newUpiId: '',
+                tabUpiId: '',
+                tabHolder: '',
+                tabHolderDropdownOpen: false,
+                returnToDepositAfterUpi: false,
+                upiRedirected: false,
+                upiMode: 'laptop',
+                chosenUpiApp: 'all',
                 newMembers: '',
 
                 calendarMonths: [
@@ -2496,11 +3642,11 @@
                 searchQuery: '',
 
                 memberColorMap: {
-                    'yashwanth': '#b8842a',
                     'madhu': '#1f6f54',
-                    'siva': '#2f4f7a',
                     'satya': '#6a4a8c',
-                    'manohar': '#a23b2e'
+                    'siva': '#2f4f7a',
+                    'manohar': '#a23b2e',
+                    'yashwanth': '#b8842a'
                 },
 
                 showToast(msg) {
@@ -2509,6 +3655,7 @@
                 },
 
                 isLeaderOrAdmin() {
+                    if (this.isAdmin) return true;
                     const user = (this.currentUser || '').toLowerCase().trim();
                     const leader = (this.data?.leader || '').toLowerCase().trim();
                     return user === 'admin' || (user && leader && user === leader);
@@ -2532,6 +3679,8 @@
                     }
                     this.topUpAmount = presetAmount || (this.data.base_amount || 1000);
                     this.topUpNote = '';
+                    this.upiRedirected = false;
+                    this.upiMode = this.isMobileDevice() ? 'mobile' : 'laptop';
                     this.topUpDropdownOpen = false;
                     this.showTopUpModal = true;
                 },
@@ -2653,18 +3802,28 @@
                             if (json.authenticated) {
                                 this.authenticated = true;
                                 this.currentUser = json.username;
+                                this.isAdmin = Boolean(json.is_admin || (json.username && json.username.toLowerCase() === 'admin'));
+                                this.myPersonalUpiId = json.user_upi || '';
+                                if (!this.isAdmin && !this.myPersonalUpiId && !this.userUpiModalDismissed) {
+                                    this.userUpiInput = '';
+                                    this.userUpiError = '';
+                                    this.showUserUpiModal = true;
+                                }
                                 await this.fetchData();
                                 const available = this.availableReportDates();
                                 if (available.length) this.selectedReportDate = available[0];
                             } else {
                                 this.authenticated = false;
                                 this.currentUser = '';
+                                this.isAdmin = false;
                             }
                         } else {
                             this.authenticated = false;
+                            this.isAdmin = false;
                         }
                     } catch (e) {
                         this.authenticated = false;
+                        this.isAdmin = false;
                     } finally {
                         this.authChecking = false;
                     }
@@ -2697,7 +3856,14 @@
                             if (json.token) localStorage.setItem('roomsplit_token', json.token);
                             this.authenticated = true;
                             this.currentUser = json.username;
+                            this.isAdmin = Boolean(json.username && json.username.toLowerCase() === 'admin');
                             this.loginPassword = '';
+                            this.myPersonalUpiId = json.user_upi || '';
+                            if (!this.isAdmin && !this.myPersonalUpiId && !this.userUpiModalDismissed) {
+                                this.userUpiInput = '';
+                                this.userUpiError = '';
+                                this.showUserUpiModal = true;
+                            }
                             this.showToast(`Verified: Logged in as ${json.username}`);
                             await this.fetchData();
                             const available = this.availableReportDates();
@@ -2721,6 +3887,7 @@
                     localStorage.removeItem('roomsplit_token');
                     this.authenticated = false;
                     this.currentUser = '';
+                    this.isAdmin = false;
                     this.loginPassword = '';
                     this.loginError = '';
                     this.showToast('You have been signed out.');
@@ -2789,6 +3956,8 @@
                         case 'pool': return 'Room account';
                         case 'expenses': return 'All entries';
                         case 'reports': return 'Statement';
+                        case 'upi': return 'UPI & Payments';
+                        case 'schedule': return 'Holder schedule';
                         default: return 'Overview';
                     }
                 },
@@ -3061,6 +4230,7 @@
                     this.newAutoCalendar = this.data.auto_calendar !== undefined ? Boolean(this.data.auto_calendar) : true;
                     this.newLeader = this.data.leader || (this.data.members && this.data.members[0]) || '';
                     this.newBaseAmount = this.data.base_amount || 1000;
+                    this.newUpiId = this.data.upi_id || '';
                     this.newMembers = (this.data.members || []).join(', ');
                     this.leaderDropdownOpen = false;
                     this.showSetupModal = true;
@@ -3068,6 +4238,15 @@
 
                 async submitSetup() {
                     const memberList = (this.data.members && this.data.members.length) ? this.data.members : ['yashwanth', 'madhu', 'siva', 'satya', 'manohar'];
+                    // Client-side Security Validation for UPI ID
+                    if (this.newUpiId && this.newUpiId.trim()) {
+                        const upiVal = this.newUpiId.trim().toLowerCase();
+                        const upiPattern = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/;
+                        if (!upiPattern.test(upiVal)) {
+                            alert('Invalid UPI ID format. Please enter a valid handle like 9876543210@upi or name@okaxis.');
+                            return;
+                        }
+                    }
                     try {
                         const res = await fetch('/api/admin/update_config', {
                             method: 'POST',
@@ -3076,7 +4255,8 @@
                                 month: this.newMonth || this.getLiveCalendarMonth(),
                                 leader: (this.newLeader || memberList[0]).toLowerCase(),
                                 base_amount: parseFloat(this.newBaseAmount) || 1000,
-                                auto_calendar: Boolean(this.newAutoCalendar)
+                                auto_calendar: Boolean(this.newAutoCalendar),
+                                upi_id: (this.newUpiId || '').trim().toLowerCase()
                             })
                         });
                         if (res.ok) {
@@ -3095,6 +4275,335 @@
                         }
                     } catch (e) {
                         alert('Failed to save settings: ' + e.message);
+                    }
+                },
+
+                isMobileDevice() {
+                    return window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                },
+
+                getUpiPayLink(amt, member, note) {
+                    const upi = (this.data?.upi_id || '').trim().toLowerCase();
+                    if (!upi) return '#';
+                    const numAmt = parseFloat(amt) || 0;
+                    const cleanAmt = Math.min(100000, Math.max(0.01, numAmt)).toFixed(2);
+                    const rawLeader = this.data?.leader || 'Room Account';
+                    const payeeName = rawLeader.replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Room Account';
+                    const rawMember = member || this.currentUser || 'Roommate';
+                    const cleanMember = rawMember.replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 20) || 'Roommate';
+                    const baseNote = (note || 'Room Deposit').replace(/[^a-zA-Z0-9 -]/g, '').trim();
+                    const cleanNote = `${baseNote} from ${cleanMember}`.slice(0, 45);
+                    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=${encodeURIComponent(cleanNote)}`;
+                },
+
+                getUpiQrCodeUrl(amt, member, note) {
+                    const link = this.getUpiPayLink(amt, member, note);
+                    return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(link);
+                },
+
+                launchUpiApp(appName = 'all') {
+                    const amt = parseFloat(this.topUpAmount);
+                    if (!amt || amt <= 0) {
+                        alert('Please enter a valid deposit amount first.');
+                        return;
+                    }
+                    if (amt > 100000) {
+                        alert('Deposit amount cannot exceed ₹1,00,000 per standard UPI limits.');
+                        return;
+                    }
+                    const member = this.isLeaderOrAdmin() ? this.topUpMember : this.currentUser;
+                    const baseLink = this.getUpiPayLink(amt, member, this.topUpNote);
+                    if (!baseLink || baseLink === '#') {
+                        alert('Room Account UPI ID is not configured yet. The account holder can set it in Passbook Settings.');
+                        return;
+                    }
+
+                    this.chosenUpiApp = appName;
+                    this.upiRedirected = true;
+
+                    const query = baseLink.replace(/^upi:\/\/pay\?/, '');
+                    let targetUrl = baseLink;
+                    let appLabel = 'UPI App';
+
+                    if (appName === 'gpay') {
+                        targetUrl = 'tez://upi/pay?' + query;
+                        appLabel = 'Google Pay';
+                    } else if (appName === 'phonepe') {
+                        targetUrl = 'phonepe://pay?' + query;
+                        appLabel = 'PhonePe';
+                    } else if (appName === 'paytm') {
+                        targetUrl = 'paytmmp://pay?' + query;
+                        appLabel = 'Paytm';
+                    }
+
+                    this.showToast(`🚀 Opening ${appLabel}...`);
+
+                    // Directly redirect browser to the selected UPI app
+                    window.location.href = targetUrl;
+
+                    // If on device where specific scheme isn't registered, fallback to universal UPI chooser
+                    if (appName !== 'all') {
+                        setTimeout(() => {
+                            if (document.hasFocus()) {
+                                window.location.href = baseLink;
+                            }
+                        }, 2000);
+                    }
+                },
+
+                launchUpiPayment() {
+                    this.launchUpiApp('all');
+                },
+
+                copyUpiId(id) {
+                    if (!id) return;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(id).then(() => {
+                            this.showToast('✓ UPI ID copied: ' + id);
+                        }).catch(() => {
+                            this.fallbackCopy(id);
+                        });
+                    } else {
+                        this.fallbackCopy(id);
+                    }
+                },
+
+                fallbackCopy(text) {
+                    const el = document.createElement('textarea');
+                    el.value = text;
+                    document.body.appendChild(el);
+                    el.select();
+                    try {
+                        document.execCommand('copy');
+                        this.showToast('✓ UPI ID copied: ' + text);
+                    } catch (e) {
+                        prompt('Copy UPI ID:', text);
+                    }
+                    document.body.removeChild(el);
+                },
+
+                goToUpiTab(returnToDeposit = false) {
+                    this.returnToDepositAfterUpi = returnToDeposit;
+                    this.tabUpiId = (this.data && this.data.upi_id) ? this.data.upi_id : '';
+                    this.tabHolder = (this.data && this.data.leader) ? this.data.leader : (this.currentUser || '');
+                    this.tabHolderDropdownOpen = false;
+                    this.showTopUpModal = false;
+                    this.mobileSidebarOpen = false;
+                    this.currentTab = 'upi';
+                },
+
+                async submitUpiTabConfig() {
+                    if (!this.isLeaderOrAdmin()) {
+                        alert(`Permission denied: Only the current account holder (${this.data?.leader || 'leader'}) can change the account holder or update room UPI credentials.`);
+                        return;
+                    }
+                    const upiRegex = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/;
+                    const val = (this.tabUpiId || '').trim().toLowerCase();
+                    if (val && !upiRegex.test(val)) {
+                        alert('Please enter a valid UPI ID (e.g. yourname@okaxis, 9876543210@paytm, name@okhdfcbank).');
+                        return;
+                    }
+                    const chosenHolder = (this.tabHolder || this.data?.leader || this.currentUser || '').trim().toLowerCase();
+
+                    try {
+                        const res = await fetch('/api/update_upi', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ upi_id: val, leader: chosenHolder })
+                        });
+                        const resData = await res.json();
+                        if (res.ok && resData.status === 'success') {
+                            await this.fetchData();
+                            this.showToast('✓ UPI details & Account Holder updated successfully!');
+
+                            // If user clicked from deposit slip, automatically redirect them back ready to pay
+                            if (this.returnToDepositAfterUpi) {
+                                this.returnToDepositAfterUpi = false;
+                                const amt = parseFloat(this.topUpAmount) || this.data.base_amount || 1000;
+                                const member = this.isLeaderOrAdmin() ? this.topUpMember : this.currentUser;
+                                setTimeout(() => {
+                                    this.openTopUpModal(member, amt);
+                                    this.showToast('⚡ Returning to deposit slip ready to pay...');
+                                }, 300);
+                            }
+                        } else {
+                            alert(resData.detail || 'Failed to update UPI credentials.');
+                        }
+                    } catch (e) {
+                        alert('Network error while updating UPI credentials.');
+                    }
+                },
+
+                openUserUpiModal() {
+                    this.userUpiInput = this.myPersonalUpiId || '';
+                    this.userUpiError = '';
+                    this.showUserUpiModal = true;
+                },
+
+                async submitSaveUserUpi() {
+                    const upiRegex = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/;
+                    const val = (this.userUpiInput || '').trim().toLowerCase();
+                    if (!val) {
+                        this.userUpiError = 'Please enter your personal UPI ID.';
+                        return;
+                    }
+                    if (!upiRegex.test(val)) {
+                        this.userUpiError = 'Invalid UPI ID format (e.g. yourname@okaxis, 9876543210@ybl).';
+                        return;
+                    }
+                    this.userUpiSaving = true;
+                    this.userUpiError = '';
+                    try {
+                        const res = await fetch('/api/user/upi', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ upi_id: val })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.myPersonalUpiId = d.upi_id;
+                            this.showUserUpiModal = false;
+                            this.showToast(`✓ Duty Room Money UPI saved for ${this.currentUser}!`);
+                            // If current user is also the active month leader, sync active tab view
+                            if (this.currentUser && this.data && this.currentUser.toLowerCase() === (this.data.leader || '').toLowerCase()) {
+                                this.tabUpiId = d.upi_id;
+                            }
+                            await this.fetchData();
+                        } else {
+                            this.userUpiError = d.detail || 'Failed to save personal UPI ID.';
+                        }
+                    } catch (e) {
+                        this.userUpiError = 'Network error saving UPI details.';
+                    } finally {
+                        this.userUpiSaving = false;
+                    }
+                },
+
+                getTabUpiQrCodeUrl(amt = 1000) {
+                    const upi = (this.tabUpiId || '').trim().toLowerCase();
+                    if (!upi || !upi.includes('@')) return '';
+                    const leader = this.tabHolder || this.data?.leader || 'Room Account';
+                    const payeeName = leader.replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Room Account';
+                    const cleanAmt = (parseFloat(amt) || 1000).toFixed(2);
+                    const link = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=${encodeURIComponent('Room Deposit')}`;
+                    return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(link);
+                },
+
+                getOrderedScheduleMonths() {
+                    const months = this.calendarMonths || [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const active = this.data?.month || 'September';
+                    const idx = months.indexOf(active);
+                    if (idx === -1) return months;
+                    return [...months.slice(idx), ...months.slice(0, idx)];
+                },
+
+                getMonthHolder(month) {
+                    if (!month) return 'madhu';
+                    if (this.data?.month_schedule && this.data.month_schedule[month]) {
+                        return this.data.month_schedule[month];
+                    }
+                    const defaultSeq = ['madhu', 'satya', 'siva', 'manohar', 'yashwanth'];
+                    const months = this.calendarMonths || [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const septIdx = months.indexOf('September');
+                    const mIdx = months.indexOf(month);
+                    if (septIdx !== -1 && mIdx !== -1) {
+                        const offset = (mIdx - septIdx + 12) % 12;
+                        return defaultSeq[offset % defaultSeq.length];
+                    }
+                    return 'madhu';
+                },
+
+                openSwapModal(initialMonth = null) {
+                    if (!this.isAdmin) {
+                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
+                        return;
+                    }
+                    this.swapMonthA = initialMonth || this.data?.month || 'October';
+                    const months = this.getOrderedScheduleMonths();
+                    const nextMonth = months.find(m => m !== this.swapMonthA) || 'November';
+                    this.swapMonthB = nextMonth;
+                    this.showSwapModal = true;
+                },
+
+                async assignMonthHolder(month, holder) {
+                    if (!this.isAdmin) {
+                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/holder_schedule/set', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ month, holder })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.monthDropdownOpen = null;
+                            await this.fetchData();
+                            this.showToast(`✓ Assigned ${holder} as account holder for ${month}`);
+                        } else {
+                            alert(d.detail || 'Failed to update schedule.');
+                        }
+                    } catch (e) {
+                        alert('Network error assigning month holder.');
+                    }
+                },
+
+                async submitSwapMonths() {
+                    if (!this.isAdmin) {
+                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
+                        return;
+                    }
+                    if (this.swapMonthA === this.swapMonthB) {
+                        alert('Please choose two different months to swap.');
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/holder_schedule/swap', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ month_a: this.swapMonthA, month_b: this.swapMonthB })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.showSwapModal = false;
+                            await this.fetchData();
+                            this.showToast(`✓ Swapped holders: ${this.swapMonthA} (${d.schedule[this.swapMonthA]}) ⇄ ${this.swapMonthB} (${d.schedule[this.swapMonthB]})`);
+                        } else {
+                            alert(d.detail || 'Failed to swap months.');
+                        }
+                    } catch (e) {
+                        alert('Network error swapping months.');
+                    }
+                },
+
+                async resetRotationSchedule() {
+                    if (!this.isAdmin) {
+                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
+                        return;
+                    }
+                    if (!confirm('Reset schedule to default 5-person rotation: Madhu → Satya → Siva → Manohar → Yashwanth?')) {
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/holder_schedule/reset', {
+                            method: 'POST'
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            await this.fetchData();
+                            this.showToast('✓ Rotation schedule reset to default sequence!');
+                        } else {
+                            alert(d.detail || 'Failed to reset schedule.');
+                        }
+                    } catch (e) {
+                        alert('Network error resetting schedule.');
                     }
                 },
 
