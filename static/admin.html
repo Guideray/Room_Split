@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoomSplit — Administration Console</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        :root {
+            --paper: #f2ede0;
+            --paper-raised: #faf7ef;
+            --ink: #1e2a44;
+            --ink-soft: #5b6478;
+            --ink-faint: #8b8f7e;
+            --rule: #cdc3a6;
+            --rule-soft: #ded5b9;
+            --credit: #1f6f54;
+            --credit-bg: #e7efe6;
+            --debit: #a23b2e;
+            --debit-bg: #f3e6df;
+            --stamp: #b8842a;
+            --stamp-bg: #f4e9d3;
+            --margin: #a6483d;
+            --spine: #1e2a44;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .font-head {
+            font-family: 'Zilla Slab', serif;
+        }
+
+        .font-num {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .page {
+            background: var(--paper-raised);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--margin);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .slip {
+            background: var(--paper-raised);
+            border: 1px dashed var(--rule);
+            border-radius: 2px;
+        }
+
+        .stamp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: .03em;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1.5px solid currentColor;
+            transform: rotate(-1deg);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .stamp-credit {
+            color: var(--credit);
+            background: var(--credit-bg);
+        }
+
+        .stamp-debit {
+            color: var(--debit);
+            background: var(--debit-bg);
+        }
+
+        .stamp-lead {
+            color: var(--stamp);
+            background: var(--stamp-bg);
+        }
+
+        .btn-ink {
+            background: var(--ink);
+            color: var(--paper-raised);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            border: 1px solid var(--ink);
+            transition: background .12s, transform .08s;
+        }
+
+        .btn-ink:hover {
+            background: #2d3c60;
+        }
+
+        .btn-ink:active {
+            transform: scale(.98);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--ink);
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 14px;
+            border-radius: 3px;
+            border: 1.5px solid var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background .12s;
+        }
+
+        .btn-outline:hover {
+            background: rgba(30, 42, 68, .06);
+        }
+
+        .btn-danger {
+            background: var(--debit);
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 7px 14px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            border: 1px solid var(--debit);
+            transition: background .12s;
+        }
+
+        .btn-danger:hover {
+            background: #872e23;
+        }
+
+        .field {
+            width: 100%;
+            background: var(--paper-raised);
+            border: 1px solid var(--rule);
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--ink);
+            border-radius: 2px;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .field:focus {
+            border-color: var(--ink);
+            box-shadow: 0 0 0 1px var(--ink);
+        }
+
+        .toast {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 100;
+            background: var(--ink);
+            color: var(--paper-raised);
+            font-weight: 600;
+            font-size: 13px;
+            padding: 10px 16px;
+            border-radius: 3px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, .35);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .perforation {
+            height: 10px;
+            background-image: radial-gradient(circle, var(--paper) 3px, transparent 3.5px);
+            background-size: 16px 10px;
+            background-position: center;
+        }
+
+        .rule-row {
+            border-bottom: 1px solid var(--rule-soft);
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen flex flex-col" x-data="adminApp()" x-init="init()">
+
+    <!-- Toast Notification -->
+    <div x-show="toastMessage" x-cloak class="toast">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span x-text="toastMessage"></span>
+    </div>
+
+    <!-- Top Administration Navbar -->
+    <header class="border-b" style="background: var(--spine); border-color: rgba(255,255,255,0.12);">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-[4px] flex items-center justify-center shadow" style="background: var(--stamp); color: #26200f;">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-head text-lg font-bold text-white tracking-wide">RoomSplit Administration</h1>
+                        <span class="stamp-badge stamp-lead text-[8px] py-0.5 px-1.5" style="transform:none;">GOVERNANCE</span>
+                    </div>
+                    <p class="text-[11px] font-num" style="color: #e7c77c;">MongoDB Atlas · GuideRay Cluster</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <a href="/" class="btn-outline text-xs text-white border-white/30 hover:bg-white/10 py-1.5 px-3">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span>Back to Passbook</span>
+                </a>
+                <template x-if="authenticated">
+                    <button @click="submitLogout()" class="text-xs py-1.5 px-3 rounded-[3px] font-semibold text-rose-300 border border-rose-400/40 hover:bg-rose-500/10">
+                        Sign Out
+                    </button>
+                </template>
+            </div>
+        </div>
+    </header>
+
+    <!-- ADMIN LOGIN GATE (If not authenticated as Admin or Account Holder) -->
+    <main x-show="!authenticated && !loading" x-cloak class="flex-1 flex items-center justify-center p-4">
+        <div class="page max-w-md w-full shadow-2xl p-6 sm:p-8 space-y-5" style="border-left: 4px solid var(--stamp);">
+            <div class="perforation"></div>
+            <div class="text-center space-y-1.5">
+                <div class="w-12 h-12 mx-auto rounded-[4px] flex items-center justify-center shadow" style="background: var(--spine); color: #e7c77c;">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="font-head text-2xl font-bold">Admin Console Sign In</h2>
+                <p class="text-xs" style="color: var(--ink-soft);">
+                    Access is restricted to <strong class="font-bold text-ink">admin</strong> or the designated Room Account Holder.
+                </p>
+            </div>
+
+            <!-- Error Banner -->
+            <div x-show="loginError" class="p-2.5 rounded text-xs flex items-center gap-2 border"
+                style="background: var(--debit-bg); border-color: var(--debit); color: var(--debit);">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span x-text="loginError" class="font-medium"></span>
+            </div>
+
+            <form @submit.prevent="submitAdminLogin()" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider mb-1" style="color: var(--ink-soft);">Username</label>
+                    <input type="text" x-model="loginUsername" required placeholder="admin or leader name" class="field font-semibold">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider mb-1" style="color: var(--ink-soft);">Password</label>
+                    <input type="password" x-model="loginPassword" required placeholder="Enter password (default: room@123)" class="field font-num">
+                    <span class="text-[10px] mt-1 block" style="color: var(--ink-faint);">Default administrator password: <code class="font-bold">room@123</code></span>
+                </div>
+                <button type="submit" class="btn-ink w-full justify-center py-2.5 font-bold text-xs" :disabled="loginLoading">
+                    <span x-text="loginLoading ? 'Verifying Authorization…' : 'Unlock Admin Console →'"></span>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- AUTHENTICATED ADMIN DASHBOARD -->
+    <main x-show="authenticated" class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- Navigation Sub-bar -->
+        <div class="flex items-center justify-between border-b pb-4 rule-row flex-wrap gap-3">
+            <div>
+                <h2 class="font-head text-2xl font-bold">Ledger Administration</h2>
+                <p class="text-xs" style="color: var(--ink-soft);">
+                    Logged in as <strong class="capitalize font-bold text-ink" x-text="adminUser"></strong>
+                    · Passbook Month: <span class="capitalize font-semibold" x-text="config.month"></span>
+                    · Account Holder: <span class="capitalize font-semibold" x-text="config.leader"></span>
+                </p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button @click="fetchAdminData()" class="btn-outline text-xs py-1.5">
+                    <svg class="w-3.5 h-3.5" :class="loading ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="page p-4 shadow-sm" style="border-left: 3px solid var(--credit);">
+                <span class="text-[10px] font-semibold uppercase tracking-wider block" style="color: var(--ink-soft);">Total Roommates</span>
+                <span class="font-num text-2xl font-bold mt-1 block" x-text="users.filter(u => u.is_member).length"></span>
+                <span class="text-[10px] mt-0.5 block" style="color: var(--ink-faint);">Active in passbook</span>
+            </div>
+            <div class="page p-4 shadow-sm" style="border-left: 3px solid var(--stamp);">
+                <span class="text-[10px] font-semibold uppercase tracking-wider block" style="color: var(--ink-soft);">Room Account Pool</span>
+                <span class="font-num text-2xl font-bold mt-1 block" style="color: var(--credit);" x-text="'₹' + (stats.roomBalance || 0).toLocaleString()"></span>
+                <span class="text-[10px] mt-0.5 block" style="color: var(--ink-faint);">Net cash available</span>
+            </div>
+            <div class="page p-4 shadow-sm" style="border-left: 3px solid var(--ink);">
+                <span class="text-[10px] font-semibold uppercase tracking-wider block" style="color: var(--ink-soft);">Ledger Expenses</span>
+                <span class="font-num text-2xl font-bold mt-1 block" x-text="stats.totalExpensesCount || 0"></span>
+                <span class="text-[10px] mt-0.5 block" style="color: var(--ink-faint);" x-text="'₹' + (stats.totalExpensesAmount || 0).toLocaleString() + ' total spend'"></span>
+            </div>
+            <div class="page p-4 shadow-sm" style="border-left: 3px solid var(--margin);">
+                <span class="text-[10px] font-semibold uppercase tracking-wider block" style="color: var(--ink-soft);">MongoDB Collections</span>
+                <span class="font-num text-2xl font-bold mt-1 block">5 Active</span>
+                <span class="text-[10px] mt-0.5 block" style="color: var(--ink-faint);">Split collections</span>
+            </div>
+        </div>
+
+        <!-- Admin Control Tabs -->
+        <div class="flex border-b text-xs font-semibold" style="border-color: var(--rule);">
+            <button @click="activeTab = 'users'"
+                class="py-2.5 px-4 transition flex items-center gap-1.5"
+                :style="activeTab === 'users' ? 'border-bottom: 2px solid var(--ink); color: var(--ink); font-weight:700;' : 'color: var(--ink-soft);'">
+                <span>👥 Roommates & Users</span>
+            </button>
+            <button @click="activeTab = 'config'"
+                class="py-2.5 px-4 transition flex items-center gap-1.5"
+                :style="activeTab === 'config' ? 'border-bottom: 2px solid var(--ink); color: var(--ink); font-weight:700;' : 'color: var(--ink-soft);'">
+                <span>⚙️ Passbook Configuration</span>
+            </button>
+            <button @click="activeTab = 'danger'"
+                class="py-2.5 px-4 transition flex items-center gap-1.5 text-rose-800"
+                :style="activeTab === 'danger' ? 'border-bottom: 2px solid var(--debit); color: var(--debit); font-weight:700;' : 'color: var(--ink-soft);'">
+                <span>⚠️ Reset & Purge Controls</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: USERS & ROOMMATES -->
+        <div x-show="activeTab === 'users'" class="space-y-6">
+
+            <!-- Register New Roommate Card (Admin Only) -->
+            <div class="page p-5 shadow-sm space-y-4" style="border-left: 4px solid var(--credit);">
+                <div class="flex items-center justify-between pb-2.5 rule-row">
+                    <div>
+                        <h3 class="font-head text-base font-bold">Register New Roommate</h3>
+                        <p class="text-[11px]" style="color: var(--ink-soft);">
+                            Add a new roommate to the passbook ledger with optional initial deposit and password.
+                        </p>
+                    </div>
+                    <span class="stamp-badge stamp-credit">ADMIN ENROLLMENT</span>
+                </div>
+
+                <form @submit.prevent="submitCreateUser()" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Roommate Name / Username</label>
+                        <input type="text" x-model="newUsername" required placeholder="e.g. kiran, ram, suresh" class="field text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Initial Deposit (₹)</label>
+                        <input type="number" step="100" min="0" x-model="newInitialDeposit" placeholder="0 or 1000" class="field text-xs font-num font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Password (Optional)</label>
+                        <input type="text" x-model="newPassword" placeholder="default: room@123" class="field text-xs font-num">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-ink w-full justify-center text-xs py-2" :disabled="createUserLoading">
+                            <span x-text="createUserLoading ? 'Adding Roommate…' : '+ Register Roommate'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Roommates & Users Table -->
+            <div class="page shadow-sm overflow-hidden" style="border-left: 4px solid var(--stamp);">
+                <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--rule-soft); background: var(--paper-raised);">
+                    <div>
+                        <h3 class="font-head text-base font-bold">Registered Users & Passbook Members</h3>
+                        <p class="text-[11px]" style="color: var(--ink-soft);">Manage roommate accounts, reset passwords, or remove members from MongoDB.</p>
+                    </div>
+                    <span class="font-num text-xs font-semibold" style="color: var(--ink-soft);" x-text="users.length + ' registered profiles'"></span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="rule-row font-semibold uppercase tracking-wider text-[10px]" style="color: var(--ink-soft); background: var(--paper);">
+                                <th class="py-2.5 px-4">Roommate / Username</th>
+                                <th class="py-2.5 px-4">Role</th>
+                                <th class="py-2.5 px-4 text-right">Base Deposited</th>
+                                <th class="py-2.5 px-4 text-center">Password Status</th>
+                                <th class="py-2.5 px-4 text-right">Admin Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="u in users" :key="u.username">
+                                <tr class="rule-row hover:bg-black/[0.02] transition">
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-6 h-6 rounded-[3px] flex items-center justify-center font-bold text-[10px] text-white shadow-sm"
+                                                :style="'background-color:' + (u.username === 'admin' ? '#1e2a44' : (u.username === config.leader ? '#b8842a' : '#1f6f54'))"
+                                                x-text="u.username.charAt(0).toUpperCase()"></div>
+                                            <div>
+                                                <span class="font-bold capitalize text-xs block text-ink" x-text="u.username"></span>
+                                                <span class="text-[9.5px] font-num" style="color: var(--ink-faint);" x-text="u.is_member ? 'Passbook member' : 'System account'"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="stamp-badge text-[9px] py-0.5 px-1.5"
+                                            :class="u.role === 'Admin' ? 'stamp-lead' : (u.role === 'Account Holder' ? 'stamp-lead' : 'stamp-credit')"
+                                            style="transform:none;"
+                                            x-text="u.role"></span>
+                                    </td>
+                                    <td class="py-3 px-4 font-num font-bold text-right" style="color: var(--credit);" x-text="'₹' + (u.base_payment || 0).toLocaleString()"></td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded"
+                                            :style="u.has_custom_password ? 'background:var(--credit-bg); color:var(--credit);' : 'background:var(--stamp-bg); color:var(--stamp);'">
+                                            <span class="w-1.5 h-1.5 rounded-full" :class="u.has_custom_password ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                                            <span x-text="u.has_custom_password ? 'Personal Password' : 'Default (room@123)'"></span>
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <button @click="openResetPassword(u.username)"
+                                                class="btn-outline text-[11px] py-1 px-2 hover:bg-white"
+                                                title="Reset or set new password">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                                </svg>
+                                                <span>Reset PW</span>
+                                            </button>
+                                            <template x-if="u.username !== 'admin' && u.username !== adminUser">
+                                                <button @click="deleteUser(u.username)"
+                                                    class="btn-danger text-[11px] py-1 px-2"
+                                                    title="Permanently remove roommate">
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PASSBOOK CONFIGURATION -->
+        <div x-show="activeTab === 'config'" class="page p-6 shadow-sm space-y-5" style="border-left: 4px solid var(--stamp);">
+            <div class="pb-3 border-b rule-row">
+                <h3 class="font-head text-base font-bold">Month & Account Holder Configuration</h3>
+                <p class="text-[11px]" style="color: var(--ink-soft);">Adjust current ledger period name, room leader, and base deposit targets.</p>
+            </div>
+
+            <form @submit.prevent="saveConfig()" class="max-w-md space-y-4">
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Month</label>
+                    <select x-model="config.month" required class="field font-semibold capitalize">
+                        <template x-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m">
+                            <option :value="m" x-text="m" :selected="(config.month || '').toLowerCase() === m.toLowerCase()"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Account Holder (Room Leader)</label>
+                    <select x-model="config.leader" class="field font-semibold capitalize">
+                        <template x-for="m in users.filter(u => u.is_member)" :key="m.username">
+                            <option :value="m.username" x-text="m.username" :selected="m.username === config.leader"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Base Deposit Target Per Person (₹)</label>
+                    <input type="number" step="100" min="0" x-model="config.base_amount" required class="field font-num font-semibold">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="btn-ink text-xs font-bold py-2">
+                        Save Passbook Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 3: DANGER ZONE & RESET OPERATIONS -->
+        <div x-show="activeTab === 'danger'" class="space-y-4">
+            <div class="p-4 rounded-[3px] border" style="background: var(--debit-bg); border-color: var(--debit); color: var(--debit);">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Administrative Reset & Purge Governance</span>
+                </div>
+                <p class="text-xs mt-1 leading-relaxed opacity-90">
+                    These operations permanently modify MongoDB Atlas collections (<code class="font-bold font-num">expenses</code>, <code class="font-bold font-num">pool_deposits</code>, <code class="font-bold font-num">members</code>). Please verify before executing.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Card 1: Wipe Expenses -->
+                <div class="page p-5 shadow-sm flex flex-col justify-between" style="border-left: 3px solid var(--debit);">
+                    <div class="space-y-2">
+                        <h4 class="font-head text-base font-bold text-rose-900">1. Reset Ledger Expenses</h4>
+                        <p class="text-xs leading-relaxed" style="color: var(--ink-soft);">
+                            Deletes all bill entries from the <code class="font-bold font-num">expenses</code> MongoDB collection. Roommates and deposit balances remain intact.
+                        </p>
+                    </div>
+                    <div class="pt-4">
+                        <button @click="openDangerAction('reset_expenses', 'Permanently wipe all expense entries from the ledger?')"
+                            class="btn-danger w-full justify-center text-xs">
+                            Wipe Expenses Only
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Wipe Pool Deposits -->
+                <div class="page p-5 shadow-sm flex flex-col justify-between" style="border-left: 3px solid var(--stamp);">
+                    <div class="space-y-2">
+                        <h4 class="font-head text-base font-bold" style="color: var(--stamp);">2. Reset Room Deposits</h4>
+                        <p class="text-xs leading-relaxed" style="color: var(--ink-soft);">
+                            Clears the <code class="font-bold font-num">pool_deposits</code> collection and resets all roommate deposited amounts back to ₹0.
+                        </p>
+                    </div>
+                    <div class="pt-4">
+                        <button @click="openDangerAction('reset_deposits', 'Wipe all pool deposits and reset all member base payments to 0?')"
+                            class="btn-outline w-full justify-center text-xs border-amber-600 text-amber-900 hover:bg-amber-100">
+                            Reset Deposits to ₹0
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Factory Reset -->
+                <div class="page p-5 shadow-sm flex flex-col justify-between" style="border-left: 3px solid #7f1d1d; background: #fff5f5;">
+                    <div class="space-y-2">
+                        <h4 class="font-head text-base font-bold text-red-900">3. Complete Factory Reset</h4>
+                        <p class="text-xs leading-relaxed text-red-800">
+                            Restores initial default roommates, clears all expenses and deposits, and restores default room configuration.
+                        </p>
+                    </div>
+                    <div class="pt-4">
+                        <button @click="openDangerAction('factory_reset', 'DANGER: Complete factory reset will restore default roommates and wipe all ledger history. Are you sure?')"
+                            class="btn-danger w-full justify-center text-xs bg-red-800 border-red-900 hover:bg-red-900">
+                            Factory Reset All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- RESET PASSWORD MODAL -->
+    <div x-show="showResetPasswordModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
+        <div @click.away="showResetPasswordModal = false" class="slip max-w-sm w-full p-5 space-y-4 shadow-xl" style="border-style: solid;">
+            <div class="flex items-center justify-between pb-2.5 rule-row">
+                <div>
+                    <span class="text-[10px] font-num uppercase tracking-wider font-bold" style="color: var(--stamp);">Admin Credential Override</span>
+                    <h3 class="font-head text-base font-bold">Reset Password — <span class="capitalize" x-text="targetUser"></span></h3>
+                </div>
+                <button @click="showResetPasswordModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+
+            <form @submit.prevent="submitResetPassword()" class="space-y-3.5">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-[10px] font-semibold uppercase tracking-wide" style="color: var(--ink-soft);">New Password</label>
+                        <button type="button" @click="newPasswordInput = 'room@123'" class="text-[10px] text-amber-800 hover:underline">Use default (room@123)</button>
+                    </div>
+                    <input type="text" x-model="newPasswordInput" required class="field font-num text-xs">
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2 rule-row">
+                    <button type="button" @click="showResetPasswordModal = false" class="btn-outline text-xs">Cancel</button>
+                    <button type="submit" class="btn-ink text-xs font-bold" :disabled="resetPasswordLoading">
+                        <span x-text="resetPasswordLoading ? 'Updating…' : 'Set New Password'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DANGER ACTION CONFIRMATION MODAL -->
+    <div x-show="showDangerModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm">
+        <div @click.away="showDangerModal = false" class="slip max-w-md w-full p-6 space-y-4 shadow-2xl" style="border: 2px solid var(--debit);">
+            <div class="flex items-center gap-3 text-rose-800">
+                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-head text-lg font-bold text-rose-900">Confirm Ledger Action</h3>
+                    <p class="text-xs text-rose-700">Administrative confirmation required</p>
+                </div>
+            </div>
+
+            <p class="text-xs leading-relaxed py-2 border-y" style="border-color: var(--rule-soft); color: var(--ink);" x-text="confirmPrompt"></p>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" @click="showDangerModal = false" class="btn-outline text-xs">Cancel</button>
+                <button type="button" @click="executeDangerAction()" class="btn-danger text-xs font-bold" :disabled="dangerLoading">
+                    <span x-text="dangerLoading ? 'Executing…' : 'Yes, Confirm & Execute'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Automatic Auth Token Interceptor
+        const _origFetch = window.fetch;
+        window.fetch = function (url, options = {}) {
+            options = options || {};
+            options.credentials = options.credentials || 'include';
+            const token = localStorage.getItem('roomsplit_token');
+            if (token) {
+                options.headers = options.headers || {};
+                if (options.headers instanceof Headers) {
+                    if (!options.headers.has('Authorization')) options.headers.set('Authorization', 'Bearer ' + token);
+                } else if (!options.headers['Authorization']) {
+                    options.headers['Authorization'] = 'Bearer ' + token;
+                }
+            }
+            return _origFetch(url, options);
+        };
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('adminApp', () => ({
+                authenticated: false,
+                loading: false,
+                adminUser: '',
+                loginUsername: 'admin',
+                loginPassword: '',
+                loginError: '',
+                loginLoading: false,
+                toastMessage: '',
+
+                activeTab: 'users',
+                users: [],
+                config: { month: 'September', leader: 'yashwanth', base_amount: 1000 },
+                stats: { totalUsers: 0, totalExpensesCount: 0, totalExpensesAmount: 0, roomBalance: 0 },
+
+                // Create User Form
+                newUsername: '',
+                newInitialDeposit: '',
+                newPassword: '',
+                createUserLoading: false,
+
+                // Reset Password Modal
+                showResetPasswordModal: false,
+                targetUser: '',
+                newPasswordInput: 'room@123',
+                resetPasswordLoading: false,
+
+                // Danger Actions
+                showDangerModal: false,
+                dangerAction: '',
+                confirmPrompt: '',
+                dangerLoading: false,
+
+                showToast(msg) {
+                    this.toastMessage = msg;
+                    setTimeout(() => { this.toastMessage = ''; }, 3500);
+                },
+
+                async init() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/api/me');
+                        if (res.ok) {
+                            const json = await res.json();
+                            if (json.authenticated && json.is_admin) {
+                                this.authenticated = true;
+                                this.adminUser = json.username;
+                                await this.fetchAdminData();
+                            } else if (json.authenticated) {
+                                this.loginError = `User '${json.username}' does not have admin or account holder privileges.`;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Session check error:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async submitAdminLogin() {
+                    this.loginLoading = true;
+                    this.loginError = '';
+                    try {
+                        const res = await fetch('/api/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: this.loginUsername,
+                                password: this.loginPassword
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok) {
+                            if (json.token) localStorage.setItem('roomsplit_token', json.token);
+                            const meRes = await fetch('/api/me');
+                            const meJson = await meRes.json();
+                            if (meJson.is_admin) {
+                                this.authenticated = true;
+                                this.adminUser = json.username;
+                                this.showToast(`Admin Console Unlocked: ${json.username}`);
+                                await this.fetchAdminData();
+                            } else {
+                                this.loginError = `User '${json.username}' is not authorized for administration.`;
+                            }
+                        } else {
+                            this.loginError = json.detail || 'Login failed. Please check credentials.';
+                        }
+                    } catch (e) {
+                        this.loginError = 'Connection error during login.';
+                    } finally {
+                        this.loginLoading = false;
+                    }
+                },
+
+                async fetchAdminData() {
+                    try {
+                        this.loading = true;
+                        const [usersRes, dataRes] = await Promise.all([
+                            fetch('/api/admin/users'),
+                            fetch('/api/data')
+                        ]);
+                        if (usersRes.ok) {
+                            const uJson = await usersRes.json();
+                            this.users = uJson.users || [];
+                            if (uJson.config) {
+                                this.config = {
+                                    month: uJson.config.month || 'September',
+                                    leader: uJson.config.leader || 'yashwanth',
+                                    base_amount: uJson.config.base_amount || 1000
+                                };
+                            }
+                        }
+                        if (dataRes.ok) {
+                            const dJson = await dataRes.json();
+                            const summary = dJson.summary || {};
+                            const expenses = dJson.expenses || [];
+                            const totalSpend = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                            this.stats = {
+                                totalUsers: this.users.length,
+                                totalExpensesCount: expenses.length,
+                                totalExpensesAmount: Math.round(totalSpend),
+                                roomBalance: summary.room_account_balance !== undefined ? summary.room_account_balance : (summary.pool_collected || 0)
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Failed to load admin data:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async submitCreateUser() {
+                    if (!this.newUsername) return alert('Username is required.');
+                    this.createUserLoading = true;
+                    try {
+                        const res = await fetch('/api/admin/create_user', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: this.newUsername,
+                                initial_deposit: parseFloat(this.newInitialDeposit) || 0,
+                                password: this.newPassword || 'room@123'
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok) {
+                            this.showToast(json.message || 'Roommate created!');
+                            this.newUsername = '';
+                            this.newInitialDeposit = '';
+                            this.newPassword = '';
+                            await this.fetchAdminData();
+                        } else {
+                            alert(json.detail || 'Failed to create roommate.');
+                        }
+                    } catch (e) {
+                        alert('Connection error while registering roommate.');
+                    } finally {
+                        this.createUserLoading = false;
+                    }
+                },
+
+                async deleteUser(username) {
+                    if (!confirm(`Are you sure you want to completely remove roommate '${username}' from the passbook and MongoDB?`)) return;
+                    try {
+                        const res = await fetch(`/api/admin/delete_user/${username}`, { method: 'DELETE' });
+                        const json = await res.json();
+                        if (res.ok) {
+                            this.showToast(json.message || `Deleted ${username}`);
+                            await this.fetchAdminData();
+                        } else {
+                            alert(json.detail || 'Failed to delete user.');
+                        }
+                    } catch (e) {
+                        alert('Connection error while deleting user.');
+                    }
+                },
+
+                openResetPassword(username) {
+                    this.targetUser = username;
+                    this.newPasswordInput = 'room@123';
+                    this.showResetPasswordModal = true;
+                },
+
+                async submitResetPassword() {
+                    if (!this.newPasswordInput || this.newPasswordInput.length < 4) {
+                        return alert('Password must be at least 4 characters long.');
+                    }
+                    this.resetPasswordLoading = true;
+                    try {
+                        const res = await fetch('/api/admin/reset_password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: this.targetUser,
+                                new_password: this.newPasswordInput
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok) {
+                            this.showToast(json.message || `Password updated for ${this.targetUser}`);
+                            this.showResetPasswordModal = false;
+                            await this.fetchAdminData();
+                        } else {
+                            alert(json.detail || 'Failed to reset password.');
+                        }
+                    } catch (e) {
+                        alert('Connection error while updating password.');
+                    } finally {
+                        this.resetPasswordLoading = false;
+                    }
+                },
+
+                async saveConfig() {
+                    try {
+                        const res = await fetch('/api/admin/update_config', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                month: this.config.month,
+                                leader: this.config.leader,
+                                base_amount: parseFloat(this.config.base_amount),
+                                auto_calendar: false
+                            })
+                        });
+                        const json = await res.json();
+                        if (res.ok) {
+                            this.showToast(json.message || 'Passbook configuration saved.');
+                            await this.fetchAdminData();
+                        } else {
+                            alert(json.detail || 'Failed to save passbook configuration.');
+                        }
+                    } catch (e) {
+                        alert('Error saving passbook configuration.');
+                    }
+                },
+
+                openDangerAction(action, promptText) {
+                    this.dangerAction = action;
+                    this.confirmPrompt = promptText;
+                    this.showDangerModal = true;
+                },
+
+                async executeDangerAction() {
+                    this.dangerLoading = true;
+                    try {
+                        let endpoint = '';
+                        if (this.dangerAction === 'reset_expenses') endpoint = '/api/admin/reset_expenses';
+                        else if (this.dangerAction === 'reset_deposits') endpoint = '/api/admin/reset_deposits';
+                        else if (this.dangerAction === 'factory_reset') endpoint = '/api/admin/factory_reset';
+
+                        const res = await fetch(endpoint, { method: 'POST' });
+                        const json = await res.json();
+                        if (res.ok) {
+                            this.showToast(json.message || 'Operation executed successfully.');
+                            this.showDangerModal = false;
+                            await this.fetchAdminData();
+                        } else {
+                            alert(json.detail || 'Operation failed.');
+                        }
+                    } catch (e) {
+                        alert('Connection error executing danger action.');
+                    } finally {
+                        this.dangerLoading = false;
+                    }
+                },
+
+                async submitLogout() {
+                    try {
+                        await fetch('/api/logout', { method: 'POST' });
+                    } catch (e) { }
+                    localStorage.removeItem('roomsplit_token');
+                    window.location.href = '/';
+                }
+            }));
+        });
+    </script>
+</body>
+
+</html>

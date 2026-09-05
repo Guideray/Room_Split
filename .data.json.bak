@@ -1,0 +1,104 @@
+{
+  "month": "September",
+  "leader": "yashwanth",
+  "base_amount": 1000.0,
+  "members": [
+    "yashwanth",
+    "madhu",
+    "siva",
+    "satya",
+    "manohar"
+  ],
+  "base_payments": {
+    "yashwanth": 1500.0,
+    "madhu": 1500.0,
+    "siva": 1500.0,
+    "satya": 1500.0,
+    "manohar": 2000.0
+  },
+  "expenses": [
+    {
+      "id": 1,
+      "payer": "madhu",
+      "desc": "wifi",
+      "amount": 30.0,
+      "split_mode": "all",
+      "split_between": [
+        "yashwanth",
+        "madhu",
+        "siva",
+        "satya",
+        "manohar"
+      ],
+      "custom_splits": null,
+      "date": "2026-09-04 23:52"
+    },
+    {
+      "id": 2,
+      "payer": "siva",
+      "desc": "rice",
+      "amount": 200.0,
+      "split_mode": "custom",
+      "split_between": [
+        "yashwanth",
+        "madhu",
+        "manohar"
+      ],
+      "custom_splits": null,
+      "date": "2026-09-04 23:54"
+    },
+    {
+      "id": 3,
+      "payer": "Room Account",
+      "desc": "tea",
+      "amount": 1000.0,
+      "split_mode": "all",
+      "split_between": [
+        "yashwanth",
+        "madhu",
+        "siva",
+        "satya",
+        "manohar"
+      ],
+      "custom_splits": null,
+      "date": "2026-09-04 23:59"
+    }
+  ],
+  "pool_deposits": [
+    {
+      "id": 1,
+      "member": "yashwanth",
+      "amount": 1500.0,
+      "note": "Pool Top-up",
+      "date": "2026-09-04 23:49"
+    },
+    {
+      "id": 2,
+      "member": "madhu",
+      "amount": 1500.0,
+      "note": "Pool Top-up",
+      "date": "2026-09-04 23:49"
+    },
+    {
+      "id": 3,
+      "member": "siva",
+      "amount": 1500.0,
+      "note": "Pool Top-up",
+      "date": "2026-09-04 23:49"
+    },
+    {
+      "id": 4,
+      "member": "satya",
+      "amount": 1500.0,
+      "note": "Pool Top-up",
+      "date": "2026-09-04 23:49"
+    },
+    {
+      "id": 5,
+      "member": "manohar",
+      "amount": 2000.0,
+      "note": "Pool Top-up",
+      "date": "2026-09-04 23:50"
+    }
+  ]
+}
