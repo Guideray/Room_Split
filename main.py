@@ -83,7 +83,7 @@ def login(login_data: LoginData, response: Response):
             raise HTTPException(status_code=401, detail="Incorrect password.")
     else:
         if password != DEFAULT_PASSWORD:
-            raise HTTPException(status_code=401, detail=f"Incorrect password. Default password is {DEFAULT_PASSWORD}")
+            raise HTTPException(status_code=401, detail="Incorrect password.")
 
     token = create_jwt_token(username, expires_days=30)
     response.set_cookie(
@@ -161,7 +161,7 @@ def change_password(payload: ChangePasswordData, request: Request):
             raise HTTPException(status_code=400, detail="Current password is incorrect.")
     else:
         if old_pw != DEFAULT_PASSWORD:
-            raise HTTPException(status_code=400, detail=f"Current password is incorrect. Default password is {DEFAULT_PASSWORD}")
+            raise HTTPException(status_code=400, detail="Current password is incorrect.")
 
     save_user_password(username, hash_password(new_pw))
     return {"status": "success", "message": "Password updated successfully."}
@@ -170,12 +170,9 @@ def change_password(payload: ChangePasswordData, request: Request):
 @app.get("/api/public_info")
 def get_public_info():
     cfg = get_config()
-    members = get_members_list()
     return {
         "month": cfg.get("month", "September"),
-        "leader": cfg.get("leader", ""),
-        "members": members,
-        "default_password": DEFAULT_PASSWORD
+        "leader": cfg.get("leader", "")
     }
 
 
@@ -272,9 +269,48 @@ def setup_month(setup: SetupData):
     return {"status": "success"}
 
 
+def check_can_manage_deposit_for_member(request: Request, target_member: str) -> str:
+    """Verify that the caller is Admin, Account Holder (Leader), or the target member themselves."""
+    token = get_token_from_request(request)
+    if not token:
+        return target_member
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    sub = payload.get("sub", "").lower().strip()
+    cfg = get_config()
+    leader = (cfg.get("leader") or "").lower().strip()
+    target_clean = target_member.lower().strip()
+    if sub != "admin" and sub != leader and sub != target_clean:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Permission denied: You are signed in as '{sub}'. Only the account holder ({leader}) can record deposits for other roommates."
+        )
+    return sub
+
+
+def require_leader_or_admin(request: Request) -> str:
+    token = get_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    sub = payload.get("sub", "").lower().strip()
+    cfg = get_config()
+    leader = (cfg.get("leader") or "").lower().strip()
+    if sub != "admin" and sub != leader:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Permission denied: Only the account holder ({leader}) or admin can perform this operation."
+        )
+    return sub
+
+
 @app.post("/api/pay_base")
-def pay_base(payment: PaymentData):
+def pay_base(payment: PaymentData, request: Request):
     m_clean = payment.member.lower().strip()
+    check_can_manage_deposit_for_member(request, m_clean)
     members = get_members_list()
     if m_clean not in [m.lower() for m in members]:
         raise HTTPException(status_code=400, detail="Member not found")
@@ -297,7 +333,8 @@ def pay_base(payment: PaymentData):
 
 
 @app.post("/api/pay_all_base")
-def pay_all_base():
+def pay_all_base(request: Request):
+    require_leader_or_admin(request)
     cfg = get_config()
     members = get_members_list()
     base_amt = float(cfg.get("base_amount", 1000.0))
@@ -319,7 +356,8 @@ def pay_all_base():
 
 
 @app.post("/api/set_base_amount")
-def set_base_amount(payload: dict):
+def set_base_amount(payload: dict, request: Request):
+    require_leader_or_admin(request)
     amt = float(payload.get("amount", 1000.0))
     if amt <= 0:
         raise HTTPException(status_code=400, detail="Base amount must be greater than 0")
@@ -329,8 +367,9 @@ def set_base_amount(payload: dict):
 
 
 @app.post("/api/toggle_base")
-def toggle_base(payment: PaymentData):
+def toggle_base(payment: PaymentData, request: Request):
     m_clean = payment.member.lower().strip()
+    check_can_manage_deposit_for_member(request, m_clean)
     members = get_members_list()
     if m_clean not in [m.lower() for m in members]:
         raise HTTPException(status_code=400, detail="Member not found")
@@ -343,8 +382,9 @@ def toggle_base(payment: PaymentData):
 
 
 @app.post("/api/topup")
-def add_topup(topup: TopUpData):
+def add_topup(topup: TopUpData, request: Request):
     m_clean = topup.member.lower().strip()
+    check_can_manage_deposit_for_member(request, m_clean)
     members = get_members_list()
     if m_clean not in [m.lower() for m in members]:
         raise HTTPException(status_code=400, detail="Member not found")
@@ -366,12 +406,14 @@ def add_topup(topup: TopUpData):
 
 
 @app.delete("/api/topup/{topup_id}")
-def delete_topup(topup_id: int):
+def delete_topup(topup_id: int, request: Request):
     target = delete_deposit_record(topup_id)
     if not target:
         raise HTTPException(status_code=404, detail="Top-up record not found")
 
     member = target.get("member", "").lower().strip()
+    check_can_manage_deposit_for_member(request, member)
+
     amt = float(target.get("amount", 0.0))
     base_payments = get_base_payments()
     if member in base_payments:
@@ -382,8 +424,9 @@ def delete_topup(topup_id: int):
 
 
 @app.post("/api/set_member_deposit")
-def set_member_deposit(payment: PaymentData):
+def set_member_deposit(payment: PaymentData, request: Request):
     m_clean = payment.member.lower().strip()
+    check_can_manage_deposit_for_member(request, m_clean)
     members = get_members_list()
     if m_clean not in [m.lower() for m in members]:
         raise HTTPException(status_code=400, detail="Member not found")
