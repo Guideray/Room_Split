@@ -4326,16 +4326,6 @@
                         return;
                     }
 
-                    // Check if current user is attempting to pay themselves (NPCI bank security decline reason)
-                    const currentUserName = (this.currentUser || '').trim().toLowerCase();
-                    const leaderName = (this.data?.leader || '').trim().toLowerCase();
-                    if (currentUserName && leaderName && currentUserName === leaderName) {
-                        alert(
-                            `⚠️ Bank Security Notice:\n\nYou are logged in as "${this.currentUser}", the designated account holder for ${this.data.month}.\n\nBanks and UPI apps (PhonePe, GPay, Paytm) strictly prohibit self-transfers for security.\n\nPlease click the green "✓ Record My Deposit into Ledger" button above to record your share without an unnecessary self-transfer.`
-                        );
-                        return;
-                    }
-
                     // Auto-copy UPI ID to clipboard as a convenient fallback
                     this.copyUpiId(upi);
 
@@ -4348,8 +4338,8 @@
                     // Clean transaction note (NPCI P2P compliant)
                     const tn = 'RoomDeposit';
 
-                    // Standard query parameters with amount PREFILLED (strictly P2P parameters)
-                    const queryParams = `pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=${encodeURIComponent(tn)}`;
+                    // Standard query parameters with amount PREFILLED (strictly P2P parameters, literal @ in pa)
+                    const queryParams = `pa=${upi}&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}`;
 
                     const universalUpiUrl = `upi://pay?${queryParams}`;
                     let targetUrl = universalUpiUrl;
@@ -4386,7 +4376,16 @@
 
                     this.showToast(`Opening ${appLabel} with ₹${Number(cleanAmt).toLocaleString()} prefilled...`);
 
-                    window.location.href = targetUrl;
+                    try {
+                        const linkEl = document.createElement('a');
+                        linkEl.href = targetUrl;
+                        linkEl.rel = 'noopener noreferrer';
+                        document.body.appendChild(linkEl);
+                        linkEl.click();
+                        document.body.removeChild(linkEl);
+                    } catch (e) {
+                        window.location.href = targetUrl;
+                    }
 
                     // Fallback to universal intent if specific package is not installed on device
                     if (isAndroid && targetUrl.startsWith('intent://')) {
