@@ -1911,43 +1911,21 @@
                                     <span>Active: <strong class="capitalize font-bold" x-text="(data.month || 'September') + ' (' + (data.leader || 'madhu') + ')'"></strong></span>
                                 </div>
 
-                                <template x-if="isAdmin">
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        <button type="button" @click="openSwapModal()"
-                                            class="btn-outline text-xs flex items-center gap-1 py-1 px-2.5 font-semibold cursor-pointer shadow-xs"
-                                            style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
-                                            <svg class="w-3.5 h-3.5" style="color: var(--ink-soft);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                            </svg>
-                                            <span>Swap</span>
-                                        </button>
-                                        <button type="button" @click="resetRotationSchedule()"
-                                            class="btn-outline text-xs flex items-center gap-1 py-1 px-2.5 cursor-pointer shadow-xs"
-                                            style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink-soft);"
-                                            title="Reset to default sequence">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                            <span>Reset</span>
-                                        </button>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <template x-if="isAdmin">
                                         <a href="/admin" class="btn-ink text-xs py-1 px-2.5 font-bold cursor-pointer shadow-xs"
                                             style="background: var(--spine); color: #ffffff;">
                                             Admin Console ↗
                                         </a>
-                                    </div>
-                                </template>
-
-                                <template x-if="!isAdmin">
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        <span class="text-[10.5px] px-2 py-1 rounded font-medium flex items-center gap-1 shrink-0 whitespace-nowrap"
-                                            style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule);">
-                                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                            </svg>
-                                            Admin Governed
-                                        </span>
-                                    </div>
-                                </template>
+                                    </template>
+                                    <span class="text-[10.5px] px-2.5 py-1 rounded font-medium flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                                        style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule);">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                        Admin Governed Schedule
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -2035,57 +2013,15 @@
                                                     </template>
                                                 </td>
 
-                                                <!-- Governance & Actions -->
+                                                <!-- Governance & Status -->
                                                 <td class="py-3.5 px-4 text-right shrink-0 whitespace-nowrap">
-                                                    <template x-if="isAdmin">
-                                                        <div class="relative inline-flex items-center gap-1.5 justify-end shrink-0 whitespace-nowrap" @click.outside="monthDropdownOpen = (monthDropdownOpen === monthName ? null : monthDropdownOpen)">
-                                                            <button type="button" @click="monthDropdownOpen = (monthDropdownOpen === monthName ? null : monthName)"
-                                                                class="btn-outline text-xs font-bold py-1 px-2.5 flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
-                                                                style="color: var(--ink); border: 1px solid var(--rule); background: var(--paper);">
-                                                                <span>Assign</span>
-                                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                                                </svg>
-                                                            </button>
-                                                            <button type="button" @click="openSwapModal(monthName)"
-                                                                class="p-1 rounded cursor-pointer shrink-0 hover:bg-[var(--paper)] transition-colors"
-                                                                style="color: var(--ink-soft);"
-                                                                title="Swap month turn">
-                                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                                                </svg>
-                                                            </button>
-                                                            <div x-show="monthDropdownOpen === monthName" x-cloak
-                                                                class="absolute right-0 top-full mt-1 z-30 rounded shadow-lg py-1 w-36 max-h-48 overflow-y-auto text-left"
-                                                                style="background: var(--paper-raised); border: 1px solid var(--rule);">
-                                                                <div class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider border-b"
-                                                                    style="color: var(--ink-faint); border-color: var(--rule-soft);">
-                                                                    Select Holder
-                                                                </div>
-                                                                <template x-for="m in (data.members || [])" :key="'assign-row-' + monthName + '-' + m">
-                                                                    <button type="button" @click="assignMonthHolder(monthName, m)"
-                                                                        class="w-full px-2.5 py-1.5 flex items-center justify-between text-xs hover:bg-[var(--paper)] text-left capitalize cursor-pointer">
-                                                                        <span :class="getMonthHolder(monthName) === m ? 'font-bold' : ''"
-                                                                            :style="getMonthHolder(monthName) === m ? 'color: var(--credit);' : 'color: var(--ink);'"
-                                                                            x-text="m"></span>
-                                                                        <template x-if="getMonthHolder(monthName) === m">
-                                                                            <span style="color: var(--credit);" class="font-bold">✓</span>
-                                                                        </template>
-                                                                    </button>
-                                                                </template>
-                                                            </div>
-                                                        </div>
-                                                    </template>
-
-                                                    <template x-if="!isAdmin">
-                                                        <span class="stamp-badge stamp-credit text-[10px] py-1 px-2.5 font-semibold shrink-0 whitespace-nowrap shadow-2xs"
-                                                            style="transform:none;">
-                                                            <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                            </svg>
-                                                            Auto-Synced
-                                                        </span>
-                                                    </template>
+                                                    <span class="stamp-badge stamp-credit text-[10px] py-1 px-2.5 font-semibold shrink-0 whitespace-nowrap shadow-2xs"
+                                                        style="transform:none;">
+                                                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        Admin Governed
+                                                    </span>
                                                 </td>
                                             </tr>
                                         </template>
@@ -2402,36 +2338,22 @@
                                 <span>Auto-sync with real calendar (advances month automatically)</span>
                             </label>
                         </div>
-                        <div class="relative" @click.outside="leaderDropdownOpen = false">
+                        <div>
                             <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1"
-                                style="color: var(--ink-soft);">Account holder</label>
-                            <button type="button" @click="leaderDropdownOpen = !leaderDropdownOpen"
-                                class="field flex items-center justify-between text-left cursor-pointer">
-                                <span class="text-xs font-semibold capitalize" x-show="newLeader"
-                                    x-text="newLeader"></span>
-                                <span class="text-xs" style="color: var(--ink-faint);" x-show="!newLeader">Select
-                                    holder…</span>
-                                <svg class="w-3.5 h-3.5 transition-transform"
-                                    :class="leaderDropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="leaderDropdownOpen" x-cloak
-                                class="absolute left-0 right-0 mt-1 z-50 page py-1 shadow-lg">
-                                <template x-for="m in currentSetupMemberList()" :key="'lead-' + m">
-                                    <div @click="selectLeader(m)"
-                                        class="px-3 py-1.5 flex items-center justify-between cursor-pointer">
-                                        <span class="text-xs capitalize"
-                                            :style="newLeader === m ? 'color:var(--credit);font-weight:700' : ''"
-                                            x-text="m"></span>
-                                        <svg x-show="newLeader === m" class="w-3.5 h-3.5" style="color: var(--credit);"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                </template>
+                                style="color: var(--ink-soft);">Active Account Holder (Admin Governed)</label>
+                            <div class="field flex items-center justify-between text-left select-none opacity-90 cursor-default"
+                                style="background: var(--paper);">
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar shrink-0 font-bold" style="width:20px;height:20px;font-size:10px;"
+                                        :style="'background-color:' + getMemberColor(data.leader)"
+                                        x-text="(data.leader || 'M').charAt(0).toUpperCase()"></div>
+                                    <span class="text-xs font-bold capitalize" x-text="data.leader || 'Leader'"></span>
+                                </div>
+                                <span class="stamp-badge stamp-lead text-[9px] py-0 px-1.5" style="transform:none;">Holds fund</span>
                             </div>
+                            <p class="text-[10px] mt-1" style="color: var(--ink-faint);">
+                                Account holder schedule is administered strictly in the Admin Console.
+                            </p>
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1"
@@ -2687,80 +2609,7 @@
             </div>
         </div>
 
-        <!-- Month Swap Modal -->
-        <div x-show="showSwapModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3"
-            style="background: rgba(20,20,15,.6);">
-            <div @click.away="showSwapModal = false" class="slip w-full max-w-md overflow-hidden"
-                style="border-style: solid;">
-                <div class="perforation"></div>
-                <div class="p-5 space-y-4">
-                    <div class="flex items-center justify-between pb-3 rule-row">
-                        <div>
-                            <span class="text-[10px] font-num uppercase tracking-widest text-indigo-800 font-bold">Schedule Adjustment</span>
-                            <h3 class="font-head text-base font-bold">Swap Monthly Account Holders</h3>
-                        </div>
-                        <button type="button" @click="showSwapModal = false"
-                            class="text-slate-400 hover:text-slate-800 text-lg font-bold leading-none cursor-pointer">×</button>
-                    </div>
 
-                    <p class="text-xs text-slate-600">
-                        Exchange turns between any two calendar months. For instance, swap October (<span class="font-bold capitalize" x-text="getMonthHolder(swapMonthA)"></span>) with November (<span class="font-bold capitalize" x-text="getMonthHolder(swapMonthB)"></span>).
-                    </p>
-
-                    <div class="space-y-3 pt-1">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                            <!-- Month A -->
-                            <div>
-                                <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">First Month</label>
-                                <select x-model="swapMonthA" class="field w-full text-xs font-semibold">
-                                    <template x-for="m in calendarMonths" :key="'swap-a-' + m">
-                                        <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
-                                    </template>
-                                </select>
-                            </div>
-
-                            <!-- Month B -->
-                            <div>
-                                <label class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Second Month</label>
-                                <select x-model="swapMonthB" class="field w-full text-xs font-semibold">
-                                    <template x-for="m in calendarMonths" :key="'swap-b-' + m">
-                                        <option :value="m" x-text="m + ' (' + getMonthHolder(m) + ')'"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Live Preview Banner -->
-                        <div class="p-3 rounded bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-950 space-y-1">
-                            <div class="font-bold text-indigo-900">
-                                <span>Preview Swap Result:</span>
-                            </div>
-                            <div class="flex items-center justify-between text-xs pt-1">
-                                <div>
-                                    <span class="font-semibold text-slate-700" x-text="swapMonthA"></span>: 
-                                    <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthB)"></span>
-                                </div>
-                                <span class="text-indigo-400 font-bold px-1">⇄</span>
-                                <div>
-                                    <span class="font-semibold text-slate-700" x-text="swapMonthB"></span>: 
-                                    <span class="font-bold capitalize text-indigo-700" x-text="getMonthHolder(swapMonthA)"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-3 flex items-center justify-end gap-2 rule-row">
-                        <button type="button" @click="showSwapModal = false" class="btn-outline text-xs cursor-pointer">Cancel</button>
-                        <button type="button" @click="submitSwapMonths()" class="btn-ink text-xs font-bold bg-indigo-700 hover:bg-indigo-800 text-white flex items-center gap-1.5 cursor-pointer">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                            </svg>
-                            Confirm Swap
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     <script>
         // Automatic Authorization & Cookie Session Interceptor
@@ -3555,93 +3404,6 @@
                     return 'madhu';
                 },
 
-                openSwapModal(initialMonth = null) {
-                    if (!this.isAdmin) {
-                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
-                        return;
-                    }
-                    this.swapMonthA = initialMonth || this.data?.month || 'October';
-                    const months = this.getOrderedScheduleMonths();
-                    const nextMonth = months.find(m => m !== this.swapMonthA) || 'November';
-                    this.swapMonthB = nextMonth;
-                    this.showSwapModal = true;
-                },
-
-                async assignMonthHolder(month, holder) {
-                    if (!this.isAdmin) {
-                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
-                        return;
-                    }
-                    try {
-                        const res = await fetch('/api/holder_schedule/set', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ month, holder })
-                        });
-                        const d = await res.json();
-                        if (res.ok && d.status === 'success') {
-                            this.monthDropdownOpen = null;
-                            await this.fetchData();
-                            this.showToast(`✓ Assigned ${holder} as account holder for ${month}`);
-                        } else {
-                            alert(d.detail || 'Failed to update schedule.');
-                        }
-                    } catch (e) {
-                        alert('Network error assigning month holder.');
-                    }
-                },
-
-                async submitSwapMonths() {
-                    if (!this.isAdmin) {
-                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
-                        return;
-                    }
-                    if (this.swapMonthA === this.swapMonthB) {
-                        alert('Please choose two different months to swap.');
-                        return;
-                    }
-                    try {
-                        const res = await fetch('/api/holder_schedule/swap', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ month_a: this.swapMonthA, month_b: this.swapMonthB })
-                        });
-                        const d = await res.json();
-                        if (res.ok && d.status === 'success') {
-                            this.showSwapModal = false;
-                            await this.fetchData();
-                            this.showToast(`✓ Swapped holders: ${this.swapMonthA} (${d.schedule[this.swapMonthA]}) ⇄ ${this.swapMonthB} (${d.schedule[this.swapMonthB]})`);
-                        } else {
-                            alert(d.detail || 'Failed to swap months.');
-                        }
-                    } catch (e) {
-                        alert('Network error swapping months.');
-                    }
-                },
-
-                async resetRotationSchedule() {
-                    if (!this.isAdmin) {
-                        alert('Permission denied: The rotation schedule is managed exclusively by the Administrator in the Admin Account.');
-                        return;
-                    }
-                    if (!confirm('Reset schedule to default 5-person rotation: Madhu → Satya → Siva → Manohar → Yashwanth?')) {
-                        return;
-                    }
-                    try {
-                        const res = await fetch('/api/holder_schedule/reset', {
-                            method: 'POST'
-                        });
-                        const d = await res.json();
-                        if (res.ok && d.status === 'success') {
-                            await this.fetchData();
-                            this.showToast('✓ Rotation schedule reset to default sequence!');
-                        } else {
-                            alert(d.detail || 'Failed to reset schedule.');
-                        }
-                    } catch (e) {
-                        alert('Network error resetting schedule.');
-                    }
-                },
 
                 filteredExpenses() {
                     if (!this.data.expenses) return [];

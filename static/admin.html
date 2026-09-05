@@ -459,6 +459,14 @@
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         <div class="inline-flex items-center gap-1.5">
+                                            <template x-if="u.is_member && u.username !== 'admin'">
+                                                <button type="button" @click="setDirectAccountHolder(u.username)"
+                                                    :class="(config.leader && config.leader.toLowerCase() === u.username.toLowerCase()) ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold' : 'btn-outline hover:bg-amber-50'"
+                                                    class="text-[11px] py-1 px-2.5 rounded border inline-flex items-center gap-1 cursor-pointer transition shadow-2xs shrink-0"
+                                                    :title="(config.leader && config.leader.toLowerCase() === u.username.toLowerCase()) ? 'Current Room Account Holder' : 'Set as active Room Account Holder'">
+                                                    <span x-text="(config.leader && config.leader.toLowerCase() === u.username.toLowerCase()) ? '👑 Active Holder' : '👑 Set as Holder'"></span>
+                                                </button>
+                                            </template>
                                             <button @click="openResetPassword(u.username)"
                                                 class="btn-outline text-[11px] py-1 px-2 hover:bg-white"
                                                 title="Reset or set new password">
@@ -581,9 +589,11 @@
                                                         @change="assignMonthHolder(monthName, $event.target.value)"
                                                         class="field text-xs font-bold capitalize py-1 px-2 rounded shadow-2xs cursor-pointer"
                                                         style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
-                                                        <template x-for="m in members" :key="'opt-' + monthName + '-' + m">
-                                                            <option :value="m" x-text="m" :selected="getMonthHolder(monthName) === m"></option>
-                                                        </template>
+                                                        <option value="madhu" :selected="getMonthHolder(monthName) === 'madhu'">Madhu</option>
+                                                        <option value="satya" :selected="getMonthHolder(monthName) === 'satya'">Satya</option>
+                                                        <option value="siva" :selected="getMonthHolder(monthName) === 'siva'">Siva</option>
+                                                        <option value="manohar" :selected="getMonthHolder(monthName) === 'manohar'">Manohar</option>
+                                                        <option value="yashwanth" :selected="getMonthHolder(monthName) === 'yashwanth'">Yashwanth</option>
                                                     </select>
                                                     <span class="stamp-badge text-[9.5px] py-0.5 px-2 font-semibold shrink-0 whitespace-nowrap"
                                                         style="background: var(--paper); color: var(--ink-soft); border: 1px solid var(--rule); transform:none;">
@@ -690,17 +700,28 @@
                 <div>
                     <label class="block text-[11px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Month</label>
                     <select x-model="config.month" required class="field font-semibold capitalize">
-                        <template x-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m">
-                            <option :value="m" x-text="m" :selected="(config.month || '').toLowerCase() === m.toLowerCase()"></option>
-                        </template>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold uppercase tracking-wide mb-1" style="color: var(--ink-soft);">Account Holder (Room Leader)</label>
                     <select x-model="config.leader" class="field font-semibold capitalize">
-                        <template x-for="m in users.filter(u => u.is_member)" :key="m.username">
-                            <option :value="m.username" x-text="m.username" :selected="m.username === config.leader"></option>
-                        </template>
+                        <option value="madhu">Madhu</option>
+                        <option value="satya">Satya</option>
+                        <option value="siva">Siva</option>
+                        <option value="manohar">Manohar</option>
+                        <option value="yashwanth">Yashwanth</option>
                     </select>
                 </div>
                 <div>
@@ -1149,6 +1170,27 @@
                         alert('Connection error while updating password.');
                     } finally {
                         this.resetPasswordLoading = false;
+                    }
+                },
+
+                async setDirectAccountHolder(username) {
+                    if (!confirm(`Assign '${username}' as the active Room Account Holder for ${this.config.month || 'the active month'}?`)) return;
+                    try {
+                        const res = await fetch('/api/admin/set_account_holder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ leader: username })
+                        });
+                        const d = await res.json();
+                        if (res.ok && d.status === 'success') {
+                            this.config.leader = d.leader;
+                            this.showToast(`✓ Assigned ${d.leader} as Account Holder!`);
+                            await this.fetchAdminData();
+                        } else {
+                            alert(d.detail || 'Failed to update account holder.');
+                        }
+                    } catch (e) {
+                        alert('Network error updating account holder.');
                     }
                 },
 

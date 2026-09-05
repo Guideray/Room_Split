@@ -243,15 +243,27 @@ def update_month_holder(month: str, holder: str):
     db = get_db()
     clean_holder = holder.lower().strip()
     sched = get_month_schedule()
-    sched[month] = clean_holder
+
+    # Canonical Title case month normalization
+    matched_month = next((m for m in [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ] if m.lower() == month.lower().strip()), month.strip().capitalize())
+
+    # Remove any conflicting case keys
+    for k in list(sched.keys()):
+        if k.lower() == matched_month.lower():
+            del sched[k]
+    sched[matched_month] = clean_holder
+
     update_set = {
         "month_schedule": sched,
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
     }
     cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
-    if cfg and cfg.get("month") == month:
+    cur_m = (cfg.get("month") or "September").strip() if cfg else "September"
+    if cur_m.lower() == matched_month.lower():
         update_set["leader"] = clean_holder
-        update_set["upi_id"] = get_user_upi(clean_holder)
 
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
@@ -259,6 +271,38 @@ def update_month_holder(month: str, holder: str):
         upsert=True
     )
     return sched
+
+
+def admin_set_account_holder(new_leader: str) -> Dict[str, Any]:
+    """Admin explicitly assigns the active room account holder."""
+    db = get_db()
+    clean_leader = new_leader.lower().strip()
+    cfg = db["config"].find_one({"_id": CONFIG_DOC_ID}) or {}
+    cur_m = (cfg.get("month") or datetime.now().strftime("%B")).strip()
+    matched_month = next((m for m in [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ] if m.lower() == cur_m.lower()), cur_m.capitalize())
+
+    sched = get_month_schedule()
+    for k in list(sched.keys()):
+        if k.lower() == matched_month.lower():
+            del sched[k]
+    sched[matched_month] = clean_leader
+
+    update_set = {
+        "leader": clean_leader,
+        "month": matched_month,
+        "month_schedule": sched,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    db["config"].update_one(
+        {"_id": CONFIG_DOC_ID},
+        {"$set": update_set},
+        upsert=True
+    )
+    return {"leader": clean_leader, "month": matched_month, "schedule": sched}
+
 
 
 def swap_month_holders(month_a: str, month_b: str):
@@ -321,40 +365,36 @@ def get_config() -> Dict[str, Any]:
     auto_cal = cfg.get("auto_calendar", True)
     cur_cal_month = datetime.now().strftime("%B")  # e.g., "September"
     sched = get_month_schedule()
-    if auto_cal and cfg.get("month") != cur_cal_month:
+    if auto_cal and (cfg.get("month") or "").strip().lower() != cur_cal_month.lower():
         cfg["month"] = cur_cal_month
         cfg["auto_calendar"] = True
-        if cur_cal_month in sched:
-            cal_leader = sched[cur_cal_month].lower().strip()
-            cfg["leader"] = cal_leader
-            cfg["upi_id"] = get_user_upi(cal_leader)
+        matched_sched_leader = next((h for m, h in sched.items() if m.lower() == cur_cal_month.lower()), None)
+        if matched_sched_leader:
+            cfg["leader"] = matched_sched_leader.lower().strip()
         db["config"].update_one(
             {"_id": CONFIG_DOC_ID},
             {"$set": {
                 "month": cur_cal_month,
                 "leader": cfg.get("leader", "madhu"),
-                "upi_id": cfg.get("upi_id", ""),
                 "auto_calendar": True,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
             }},
             upsert=True
         )
-    else:
-        # Dynamic UPI sync: ensure config reflects the current month's holder's personal account
-        cur_l = (cfg.get("leader") or sched.get(cfg.get("month", "September"), "madhu")).lower().strip()
-        cfg["upi_id"] = get_user_upi(cur_l)
     return cfg
 
 
 def set_month(month: str, auto_calendar: bool = False):
     db = get_db()
     sched = get_month_schedule()
-    new_leader = sched.get(month, "madhu").lower().strip()
-    active_upi = get_user_upi(new_leader)
+    matched_month = next((m for m in [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ] if m.lower() == month.lower().strip()), month.strip().capitalize())
+    new_leader = next((h for m, h in sched.items() if m.lower() == matched_month.lower()), "madhu").lower().strip()
     set_fields = {
-        "month": month,
+        "month": matched_month,
         "leader": new_leader,
-        "upi_id": active_upi,
         "auto_calendar": auto_calendar,
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
     }
@@ -368,17 +408,25 @@ def set_month(month: str, auto_calendar: bool = False):
 def update_config(month: str, leader: str, base_amount: float, auto_calendar: bool = False, upi_id: str = ""):
     db = get_db()
     clean_leader = leader.lower().strip()
+    matched_month = next((m for m in [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ] if m.lower() == month.lower().strip()), month.strip().capitalize())
+
     sched = get_month_schedule()
-    sched[month] = clean_leader
+    for k in list(sched.keys()):
+        if k.lower() == matched_month.lower():
+            del sched[k]
+    sched[matched_month] = clean_leader
 
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
         {"$set": {
-            "month": month,
+            "month": matched_month,
             "leader": clean_leader,
             "base_amount": float(base_amount),
             "auto_calendar": auto_calendar,
-            "upi_id": upi_id.strip().lower(),
+            "upi_id": "",
             "month_schedule": sched,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
         }},
@@ -706,12 +754,12 @@ def get_detailed_users_list() -> List[Dict[str, Any]]:
     """Returns detailed info for all members and accounts for the admin console."""
     db = get_db()
     cfg = get_config()
-    leader = cfg.get("leader", "")
+    leader = (cfg.get("leader") or "").lower().strip()
     members_cursor = db["members"].find({})
-    members_map = {m["name"]: m.get("base_payment", 0.0) for m in members_cursor if "name" in m}
+    members_map = {m["name"].lower().strip(): m.get("base_payment", 0.0) for m in members_cursor if "name" in m}
     
     users_cursor = db["users"].find({})
-    passwords_map = {u["username"]: True for u in users_cursor if "username" in u}
+    passwords_map = {u["username"].lower().strip(): True for u in users_cursor if "username" in u}
 
     all_names = set(members_map.keys()) | set(passwords_map.keys()) | {"admin"}
     result = []
@@ -746,20 +794,18 @@ def load_db() -> Dict[str, Any]:
 
     sched = get_month_schedule()
     current_month = cfg.get("month", "September")
-    active_leader = (cfg.get("leader") or sched.get(current_month, "madhu")).lower().strip()
+    matched_sched_leader = next((h for m, h in sched.items() if m.lower() == current_month.lower()), "madhu")
+    active_leader = (cfg.get("leader") or matched_sched_leader).lower().strip()
 
-    # Dynamic multi-account routing:
-    # The room account is strictly that month's designated account holder's registered personal Duty UPI.
-    # It dynamically switches each month with rotation and NEVER defaults to a single static UPI handle.
     user_upis = get_all_user_upis()
-    active_upi = user_upis.get(active_leader, "") or get_user_upi(active_leader)
 
     return {
         "month": current_month,
         "leader": active_leader,
         "base_amount": float(cfg.get("base_amount", 1000.0)),
-        "upi_id": active_upi,
+        "upi_id": "",
         "user_upis": user_upis,
+        "month_schedule": sched,
         "holder_schedule": sched,
         "rotation_order": DEFAULT_ROTATION_ORDER,
         "members": members,

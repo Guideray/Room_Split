@@ -15,7 +15,8 @@ from database import (
     get_user_passwords, save_user_password,
     get_user_upi, save_user_upi, get_all_user_upis,
     delete_member_record, admin_reset_user_password,
-    reset_all_expenses, reset_all_deposits, factory_reset_all_data, get_detailed_users_list
+    reset_all_expenses, reset_all_deposits, factory_reset_all_data, get_detailed_users_list,
+    admin_set_account_holder
 )
 from models import (
     SetupData, PaymentData, ExpenseData, TopUpData, LoginData, ChangePasswordData,
@@ -310,6 +311,45 @@ def admin_update_config(payload: dict, request: Request):
 
     update_config(matched_month, leader, base_amount, auto_cal, upi_id=upi_id)
     return {"status": "success", "message": "Passbook configuration updated successfully."}
+
+
+@app.post("/api/admin/set_account_holder")
+def api_set_account_holder(payload: dict, request: Request):
+    require_admin(request)
+    raw_leader = str(payload.get("leader", "")).strip().lower()
+    if not raw_leader:
+        raise HTTPException(status_code=400, detail="Roommate name is required.")
+    members = [m.lower().strip() for m in get_members_list()]
+    if raw_leader not in members:
+        raise HTTPException(status_code=400, detail=f"Roommate '{raw_leader}' is not a registered member.")
+    result = admin_set_account_holder(raw_leader)
+    return {
+        "status": "success",
+        "leader": result["leader"],
+        "month": result["month"],
+        "message": f"Successfully updated Account Holder to {raw_leader.title()}!"
+    }
+
+
+@app.post("/api/admin/update_config")
+def api_admin_update_config(payload: dict, request: Request):
+    require_admin(request)
+    month = str(payload.get("month", "September")).strip()
+    raw_leader = str(payload.get("leader", "")).strip().lower()
+    base_amount = float(payload.get("base_amount", 1000.0))
+    auto_calendar = bool(payload.get("auto_calendar", False))
+
+    if not raw_leader:
+        raise HTTPException(status_code=400, detail="Account holder is required.")
+    members = [m.lower().strip() for m in get_members_list()]
+    if raw_leader not in members:
+        raise HTTPException(status_code=400, detail=f"Roommate '{raw_leader}' is not a registered member.")
+
+    update_config(month, raw_leader, base_amount, auto_calendar)
+    return {
+        "status": "success",
+        "message": f"Passbook configuration saved. Month: {month}, Account Holder: {raw_leader.title()}."
+    }
 
 
 @app.post("/api/update_upi")
