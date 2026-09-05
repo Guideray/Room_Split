@@ -251,6 +251,7 @@ def update_month_holder(month: str, holder: str):
     cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
     if cfg and cfg.get("month") == month:
         update_set["leader"] = clean_holder
+        update_set["upi_id"] = get_user_upi(clean_holder)
 
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
@@ -277,8 +278,10 @@ def swap_month_holders(month_a: str, month_b: str):
         cur_m = cfg.get("month")
         if cur_m == month_a:
             update_set["leader"] = holder_b
+            update_set["upi_id"] = get_user_upi(holder_b)
         elif cur_m == month_b:
             update_set["leader"] = holder_a
+            update_set["upi_id"] = get_user_upi(holder_a)
 
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
@@ -293,9 +296,11 @@ def reset_month_schedule():
     sched = generate_default_rotation_schedule()
     cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
     cur_m = cfg.get("month", "September") if cfg else "September"
+    reset_leader = sched.get(cur_m, "madhu").lower().strip()
     update_set = {
         "month_schedule": sched,
-        "leader": sched.get(cur_m, "madhu"),
+        "leader": reset_leader,
+        "upi_id": get_user_upi(reset_leader),
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
     }
     db["config"].update_one(
@@ -320,30 +325,39 @@ def get_config() -> Dict[str, Any]:
         cfg["month"] = cur_cal_month
         cfg["auto_calendar"] = True
         if cur_cal_month in sched:
-            cfg["leader"] = sched[cur_cal_month]
+            cal_leader = sched[cur_cal_month].lower().strip()
+            cfg["leader"] = cal_leader
+            cfg["upi_id"] = get_user_upi(cal_leader)
         db["config"].update_one(
             {"_id": CONFIG_DOC_ID},
             {"$set": {
                 "month": cur_cal_month,
                 "leader": cfg.get("leader", "madhu"),
+                "upi_id": cfg.get("upi_id", ""),
                 "auto_calendar": True,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
             }},
             upsert=True
         )
+    else:
+        # Dynamic UPI sync: ensure config reflects the current month's holder's personal account
+        cur_l = (cfg.get("leader") or sched.get(cfg.get("month", "September"), "madhu")).lower().strip()
+        cfg["upi_id"] = get_user_upi(cur_l)
     return cfg
 
 
 def set_month(month: str, auto_calendar: bool = False):
     db = get_db()
     sched = get_month_schedule()
+    new_leader = sched.get(month, "madhu").lower().strip()
+    active_upi = get_user_upi(new_leader)
     set_fields = {
         "month": month,
+        "leader": new_leader,
+        "upi_id": active_upi,
         "auto_calendar": auto_calendar,
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M")
     }
-    if month in sched:
-        set_fields["leader"] = sched[month]
     db["config"].update_one(
         {"_id": CONFIG_DOC_ID},
         {"$set": set_fields},
@@ -565,37 +579,7 @@ def get_user_upi(username: str) -> str:
         u_clean = username.lower().strip()
         user_doc = db["users"].find_one({"username": u_clean})
         if user_doc and user_doc.get("upi_id"):
-            return user_doc["upi_id"]
-
-        # Fallback to room config if user is currently the active leader
-        cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
-        if cfg:
-            leader = (cfg.get("leader") or "madhu").lower().strip()
-            config_upi = cfg.get("upi_id", "")
-            if (u_clean == leader or u_clean == "madhu") and config_upi:
-                try:
-                    db["users"].update_one(
-                        {"username": u_clean},
-                        {
-                            "$set": {"upi_id": config_upi},
-                            "$setOnInsert": {
-                                "username": u_clean,
-                                "email": f"{u_clean}@roomsplit.local"
-                            }
-                        },
-                        upsert=True
-                    )
-                except Exception as up_err:
-                    print(f"[MongoDB Warning] get_user_upi upsert notice: {up_err}")
-                    try:
-                        db["users"].drop_index("email_1")
-                        db["users"].update_one(
-                            {"username": u_clean},
-                            {"$set": {"upi_id": config_upi}}
-                        )
-                    except Exception:
-                        pass
-                return config_upi
+            return str(user_doc["upi_id"]).strip().lower()
     except Exception as err:
         print(f"[MongoDB Warning] Error in get_user_upi: {err}")
     return ""
@@ -638,8 +622,8 @@ def save_user_upi(username: str, upi_id: str) -> str:
 
     # If this user is currently the active room account holder, sync config upi_id
     cfg = db["config"].find_one({"_id": CONFIG_DOC_ID})
-    cur_leader = (cfg.get("leader") or "madhu").lower().strip() if cfg else "madhu"
-    if u_clean == cur_leader or u_clean == "madhu":
+    cur_leader = (cfg.get("leader") or "").lower().strip() if cfg else ""
+    if u_clean == cur_leader:
         db["config"].update_one(
             {"_id": CONFIG_DOC_ID},
             {"$set": {
@@ -762,18 +746,20 @@ def load_db() -> Dict[str, Any]:
 
     sched = get_month_schedule()
     current_month = cfg.get("month", "September")
-    active_leader = cfg.get("leader") or sched.get(current_month, "madhu")
-    try:
-        active_upi = get_user_upi(active_leader) or cfg.get("upi_id", "")
-    except Exception as upi_err:
-        print(f"[MongoDB Warning] load_db get_user_upi: {upi_err}")
-        active_upi = cfg.get("upi_id", "")
+    active_leader = (cfg.get("leader") or sched.get(current_month, "madhu")).lower().strip()
+
+    # Dynamic multi-account routing:
+    # The room account is strictly that month's designated account holder's registered personal Duty UPI.
+    # It dynamically switches each month with rotation and NEVER defaults to a single static UPI handle.
+    user_upis = get_all_user_upis()
+    active_upi = user_upis.get(active_leader, "") or get_user_upi(active_leader)
 
     return {
         "month": current_month,
         "leader": active_leader,
         "base_amount": float(cfg.get("base_amount", 1000.0)),
         "upi_id": active_upi,
+        "user_upis": user_upis,
         "holder_schedule": sched,
         "rotation_order": DEFAULT_ROTATION_ORDER,
         "members": members,
