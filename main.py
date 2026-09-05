@@ -145,7 +145,7 @@ def get_current_session(request: Request):
         "is_admin": is_admin,
         "has_custom_password": sub in data.get("passwords", {}),
         "user_upi": user_upi,
-        "has_upi": bool(user_upi and "@" in user_upi)
+        "has_upi": bool(user_upi and (len(user_upi.strip()) >= 10 or "@" in user_upi))
     }
 
 
@@ -162,15 +162,21 @@ def save_personal_upi(payload: UserUpiData, request: Request):
     clean_upi = payload.upi_id.strip().lower()
 
     if clean_upi:
-        if "@" not in clean_upi or len(clean_upi.split("@")) != 2 or not clean_upi.split("@")[1]:
-            raise HTTPException(status_code=400, detail="Invalid UPI ID format. Please use a valid handle like yourname@okaxis, 9876543210@ybl, or name@paytm.")
+        import re
+        is_phone = bool(re.match(r"^[6-9]\d{9}$", clean_upi) or re.match(r"^\d{10}$", clean_upi))
+        is_upi = bool("@" in clean_upi and len(clean_upi.split("@")) == 2 and clean_upi.split("@")[1])
+        if not (is_phone or is_upi):
+            raise HTTPException(
+                status_code=400,
+                detail="Please enter a valid 10-digit mobile number (e.g., 7732087737) or UPI handle."
+            )
 
     saved_upi = save_user_upi(sub, clean_upi)
     return {
         "status": "success",
         "username": sub,
         "upi_id": saved_upi,
-        "message": "Personal room money UPI credentials saved successfully."
+        "message": "Payment mobile number / UPI credentials saved successfully."
     }
 
 
@@ -291,13 +297,15 @@ def admin_update_config(payload: dict, request: Request):
     auto_cal = bool(payload.get("auto_calendar", False))
     upi_id = str(payload.get("upi_id", "")).strip().lower()
 
-    # Enhanced Security: Validate UPI handle syntax (alphanumeric, dot, underscore, dash + @ + bank)
+    # Validate payment handle or 10-digit mobile number
     if upi_id:
         import re
-        if not re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", upi_id):
+        is_phone = bool(re.match(r"^[6-9]\d{9}$", upi_id) or re.match(r"^\d{10}$", upi_id))
+        is_upi = bool(re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", upi_id))
+        if not (is_phone or is_upi):
             raise HTTPException(
                 status_code=400,
-                detail="Invalid UPI ID format. Please provide a valid handle (e.g., 9876543210@upi or name@okhdfcbank)."
+                detail="Please provide a valid 10-digit mobile number (e.g. 7732087737) or UPI ID."
             )
 
     update_config(matched_month, leader, base_amount, auto_cal, upi_id=upi_id)
@@ -324,10 +332,12 @@ def api_update_upi(payload: dict, request: Request):
     raw_upi = str(payload.get("upi_id", "")).strip().lower()
     if raw_upi:
         import re
-        if not re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", raw_upi):
+        is_phone = bool(re.match(r"^[6-9]\d{9}$", raw_upi) or re.match(r"^\d{10}$", raw_upi))
+        is_upi = bool(re.match(r"^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$", raw_upi))
+        if not (is_phone or is_upi):
             raise HTTPException(
                 status_code=400,
-                detail="Invalid UPI ID format. Please provide a valid handle (e.g., 9876543210@upi or name@okhdfcbank)."
+                detail="Please provide a valid 10-digit mobile number (e.g. 7732087737) or UPI ID."
             )
     new_leader = payload.get("leader")
     clean_leader = None
