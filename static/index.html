@@ -623,13 +623,6 @@
                     </svg>
                     <span>Statement</span>
                 </button>
-                <button @click="goToUpiTab(false)" :class="currentTab === 'upi' ? 'active' : ''"
-                    class="tab-index w-full text-left">
-                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <span>Payment Account</span>
-                </button>
                 <button @click="currentTab = 'schedule'; mobileSidebarOpen = false;" :class="currentTab === 'schedule' ? 'active' : ''"
                     class="tab-index w-full text-left">
                     <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -705,26 +698,10 @@
 
                     <!-- Action Items List -->
                     <div class="py-1">
-                        <!-- 1. Payment Mobile Number -->
-                        <button type="button" @click="sidebarSettingsOpen = false; openUserUpiModal(); mobileSidebarOpen = false;"
-                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center justify-between gap-2 font-medium cursor-pointer transition"
-                            style="color: var(--ink);">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <svg class="w-3.5 h-3.5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                                <span class="truncate" x-text="myPersonalUpiId ? 'Payment Mobile Number' : 'Add Payment Mobile'"></span>
-                            </div>
-                            <template x-if="myPersonalUpiId">
-                                <span class="text-[9.5px] font-num font-bold px-1.5 py-0.5 rounded shrink-0 bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                    x-text="getCleanPhone(myPersonalUpiId) || myPersonalUpiId"></span>
-                            </template>
-                        </button>
-
-                        <!-- 2. Password -->
+                        <!-- 1. Password -->
                         <button type="button" @click="sidebarSettingsOpen = false; openChangePasswordModal(); mobileSidebarOpen = false;"
-                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center gap-2 font-medium cursor-pointer transition border-t"
-                            style="border-color: var(--rule-soft); color: var(--ink);">
+                            class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center gap-2 font-medium cursor-pointer transition"
+                            style="color: var(--ink);">
                             <svg class="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                             </svg>
@@ -1177,14 +1154,6 @@
                                                 x-text="'₹' + s.amount.toLocaleString()"></span>
                                             <template x-if="canDepositFor(s.from)">
                                                 <div class="flex items-center gap-1.5 shrink-0">
-                                                    <template x-if="data.upi_id && s.from !== 'Room Account'">
-                                                        <a :href="getUpiPayLink(s.amount, s.from, 'Settlement deficit')"
-                                                            title="Pay deficit via UPI app"
-                                                            class="inline-flex items-center gap-1 font-bold text-[10px] py-1 px-2 rounded text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors whitespace-nowrap"
-                                                            style="text-decoration: none;">
-                                                            <span>⚡ UPI</span>
-                                                        </a>
-                                                    </template>
                                                     <button @click="openTopUpModal(s.from, s.amount)"
                                                         class="btn-outline text-[10px] py-0.5 px-1.5 whitespace-nowrap shrink-0">Deposit</button>
                                                 </div>
@@ -1365,14 +1334,6 @@
                                             x-text="'₹' + s.amount.toLocaleString()"></span>
                                         <template x-if="canDepositFor(s.from)">
                                             <div class="flex items-center gap-1.5 shrink-0">
-                                                <template x-if="data.upi_id && s.from !== 'Room Account'">
-                                                    <a :href="getUpiPayLink(s.amount, s.from, 'Settlement deficit')"
-                                                        title="Pay deficit via UPI app"
-                                                        class="inline-flex items-center gap-1 font-bold text-[10px] py-1 px-2 rounded text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors whitespace-nowrap"
-                                                        style="text-decoration: none;">
-                                                        <span>⚡ UPI</span>
-                                                    </a>
-                                                </template>
                                                 <button @click="openTopUpModal(s.from, s.amount)"
                                                     class="btn-outline text-[10px] py-0.5 px-1.5">Deposit</button>
                                             </div>
@@ -1922,376 +1883,6 @@
                     </div>
                 </div>
 
-                <!-- UPI & Payments Tab -->
-                <div x-show="currentTab === 'upi'" class="space-y-4">
-                    <!-- Redirection Notice if sent from Deposit Slip -->
-                    <div x-show="returnToDepositAfterUpi" x-cloak
-                        class="p-3.5 rounded-[4px] border flex items-start gap-2.5 bg-emerald-50 border-emerald-300 text-emerald-950 shadow-xs">
-                        <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <div class="flex-1 text-xs">
-                            <div class="font-bold text-sm text-emerald-900">Deposit In Progress: Fill Payment Mobile</div>
-                            <p class="mt-0.5 text-emerald-800">
-                                Enter your registered 10-digit mobile number below and click <strong>"Save & Continue to Payment"</strong>. You will be redirected right back to the deposit screen ready to pay.
-                            </p>
-                        </div>
-                        <button type="button" @click="returnToDepositAfterUpi = false; openTopUpModal(currentUser, topUpAmount || 1000);"
-                            class="text-[11px] font-semibold underline text-emerald-800 hover:text-emerald-950 shrink-0 cursor-pointer">
-                            Return to Deposit
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        <!-- Left Column: Payment Mobile Configuration -->
-                        <div class="lg:col-span-7 space-y-4">
-                            <!-- Card 1: My Personal Duty Account (Private to Logged-in Roommate) -->
-                            <div class="page p-5 sm:p-6 space-y-3.5 shadow-sm" style="border-left: 4px solid var(--stamp); background: #ffffff;">
-                                <div class="flex items-start justify-between gap-3 pb-3 rule-row">
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="stamp-badge stamp-credit text-[9px] py-0 px-1.5">My Account Details</span>
-                                            <template x-if="myPersonalUpiId">
-                                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Ready for Duty
-                                                </span>
-                                            </template>
-                                            <template x-if="!myPersonalUpiId">
-                                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Action Needed
-                                                </span>
-                                            </template>
-                                        </div>
-                                        <h3 class="font-head text-base font-bold mt-1">My Payment Mobile Number</h3>
-                                        <p class="text-xs mt-0.5" style="color: var(--ink-soft);">
-                                            Your registered 10-digit mobile number for PhonePe, Google Pay, and Paytm. When you are the room account holder, roommate deposits route directly here.
-                                        </p>
-                                    </div>
-                                    <button type="button" @click="openUserUpiModal()"
-                                        class="btn-ink text-xs font-semibold py-1.5 px-3 shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                                        style="background: var(--stamp); color: #26200f;">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                        <span x-text="myPersonalUpiId ? 'Edit Mobile No.' : 'Add Mobile No.'"></span>
-                                    </button>
-                                </div>
-
-                                <div class="p-3 rounded-[3px] border space-y-2"
-                                    :style="myPersonalUpiId ? 'background: var(--paper-raised); border-color: var(--rule-soft);' : 'background: #fffbeb; border-color: #fcd34d;'">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <div class="avatar" style="width:20px;height:20px;font-size:10px;"
-                                                :style="'background-color:' + getMemberColor(currentUser)"
-                                                x-text="(currentUser || 'U').charAt(0).toUpperCase()"></div>
-                                            <span class="text-xs font-bold capitalize text-slate-800" x-text="currentUser + ' (Personal Mobile)'"></span>
-                                        </div>
-                                        <template x-if="myPersonalUpiId">
-                                            <button type="button" @click="copyText(getCleanPhone(myPersonalUpiId), 'Mobile Number')"
-                                                class="text-[10px] font-semibold text-emerald-800 hover:text-emerald-950 underline flex items-center gap-1 cursor-pointer">
-                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                                Copy Number
-                                            </button>
-                                        </template>
-                                    </div>
-
-                                    <template x-if="myPersonalUpiId">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <div class="font-mono text-sm font-bold text-slate-900 bg-white px-3 py-1.5 rounded border border-slate-200 w-full flex items-center justify-between">
-                                                <span x-text="getCleanPhone(myPersonalUpiId)"></span>
-                                                <span class="text-[10px] text-slate-500 font-sans font-normal">PhonePe · GPay · Paytm</span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                    <template x-if="!myPersonalUpiId">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs text-amber-900 italic">No payment mobile number saved yet. Click "Add Mobile No." above to add your 10-digit number.</span>
-                                        </div>
-                                    </template>
-
-                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
-                                        <svg class="w-3 h-3 text-emerald-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                        </svg>
-                                        <span>Private & Direct: Deposits sent directly to your registered mobile number without bank security declines.</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card 2: Dynamic Room Deposit Account (Monthly Holder Auto-Routing) -->
-                            <div class="page p-5 sm:p-6 space-y-4">
-                                <div class="flex items-start justify-between gap-3 pb-3 rule-row">
-                                    <div>
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="stamp-badge stamp-credit text-[9px] py-0 px-1.5">Dynamic Account</span>
-                                            <span class="text-[10px] font-bold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> Month: <span x-text="data.month"></span>
-                                            </span>
-                                            <template x-if="getPayeePhone()">
-                                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Auto-Routed
-                                                </span>
-                                            </template>
-                                            <template x-if="!getPayeePhone()">
-                                                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Mobile Number
-                                                </span>
-                                            </template>
-                                        </div>
-                                        <h3 class="font-head text-base font-bold mt-1">Monthly Room Account & Payee</h3>
-                                        <p class="text-xs mt-0.5" style="color: var(--ink-soft);">
-                                            The room account is not static. All roommate deposits for <strong class="font-semibold" x-text="data.month"></strong> automatically route to the designated month holder's personal mobile account.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-4">
-                                    <!-- Designated Month Holder Banner -->
-                                    <div class="p-3.5 rounded-[4px] border space-y-2.5"
-                                        style="background: var(--paper-raised); border-color: var(--rule-soft);">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--ink-soft);">
-                                                Designated Account Holder (<span x-text="data.month"></span>)
-                                            </span>
-                                            <span class="stamp-badge text-[9px] py-0.5 px-2 font-bold"
-                                                style="background: var(--paper); border: 1px solid var(--rule); color: var(--ink);">
-                                                12-Month Rotation Turn
-                                            </span>
-                                        </div>
-
-                                        <div class="flex items-center justify-between gap-3">
-                                            <div class="flex items-center gap-3">
-                                                <div class="avatar shadow-xs" style="width:34px;height:34px;font-size:13px;"
-                                                    :style="'background-color:' + getMemberColor(data.leader || currentUser)"
-                                                    x-text="(data.leader || currentUser || 'R').charAt(0).toUpperCase()"></div>
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-sm font-bold capitalize text-slate-900" x-text="data.leader || 'Room Account'"></span>
-                                                        <span class="stamp-badge stamp-credit text-[9px] py-0.5 px-1.5 font-bold" style="transform:none;">
-                                                            Holds Fund Now
-                                                        </span>
-                                                    </div>
-                                                    <p class="text-[10.5px] text-slate-500">
-                                                        Receives and safeguards room deposit money for <strong x-text="data.month"></strong>.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Active Duty Payment Mobile Display -->
-                                    <template x-if="getPayeePhone()">
-                                        <div class="p-3.5 rounded-[4px] border space-y-2"
-                                            style="background: #ffffff; border-color: var(--rule-soft);">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <span class="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                                                        Active Room Payment Mobile (PhonePe, Google Pay, Paytm)
-                                                    </span>
-                                                </div>
-                                                <button type="button" @click="copyText(getPayeePhone(), 'Mobile Number')"
-                                                    class="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 underline flex items-center gap-1 cursor-pointer">
-                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                    </svg>
-                                                    Copy Number
-                                                </button>
-                                            </div>
-
-                                            <div class="flex items-center justify-between gap-2 p-2.5 rounded bg-slate-50 border border-slate-200">
-                                                <div class="flex items-center gap-2 min-w-0">
-                                                    <div class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
-                                                    <span class="font-mono text-base font-bold text-slate-900 truncate tracking-wider" x-text="getPayeePhone()"></span>
-                                                </div>
-                                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded shrink-0">
-                                                    Auto-Synced
-                                                </span>
-                                            </div>
-
-                                            <p class="text-[10px] text-slate-500 pt-1">
-                                                All room deposits for <strong class="capitalize" x-text="data.month"></strong> are transferred straight to <strong class="capitalize" x-text="data.leader"></strong>'s registered mobile number.
-                                            </p>
-                                        </div>
-                                    </template>
-
-                                    <!-- Pending Mobile Alert State -->
-                                    <template x-if="!getPayeePhone()">
-                                        <div class="p-4 rounded-[4px] border border-amber-300 bg-amber-50/70 space-y-2.5">
-                                            <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
-                                                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                </svg>
-                                                <span>Awaiting Mobile Number Registration for <span class="capitalize" x-text="data.leader"></span></span>
-                                            </div>
-
-                                            <template x-if="currentUser.toLowerCase() === (data.leader || '').toLowerCase()">
-                                                <div class="space-y-2">
-                                                    <p class="text-[11px] text-amber-800 leading-relaxed">
-                                                        You are the designated account holder for <strong><span x-text="data.month"></span></strong>, but you haven't registered your payment mobile number yet. Roommates cannot send deposits until you configure your number.
-                                                    </p>
-                                                    <button type="button" @click="openUserUpiModal()"
-                                                        class="btn-credit text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold shadow-xs cursor-pointer">
-                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                                            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                        </svg>
-                                                        <span>Add My Mobile Number Now →</span>
-                                                    </button>
-                                                </div>
-                                            </template>
-
-                                            <template x-if="currentUser.toLowerCase() !== (data.leader || '').toLowerCase()">
-                                                <p class="text-[11px] text-amber-800 leading-relaxed">
-                                                    Roommate <strong class="capitalize" x-text="data.leader"></strong> has not yet registered their payment mobile number for <strong x-text="data.month"></strong>. Once <span class="capitalize" x-text="data.leader"></span> saves their number, room deposits will automatically activate.
-                                                </p>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <!-- Bottom Helper & Navigation Row -->
-                                    <div class="pt-3 rule-row flex items-center justify-between gap-3 flex-wrap">
-                                        <button type="button" @click="currentTab = 'schedule'"
-                                            class="btn-outline text-xs flex items-center gap-1.5 cursor-pointer">
-                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span>View 12-Month Schedule →</span>
-                                        </button>
-
-                                        <div class="flex items-center gap-2">
-                                            <template x-if="currentUser.toLowerCase() === (data.leader || '').toLowerCase() || isAdmin">
-                                                <button type="button" @click="openUserUpiModal()"
-                                                    class="btn-credit text-xs flex items-center gap-1.5 font-semibold cursor-pointer">
-                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span x-text="getPayeePhone() ? 'Update Mobile No.' : 'Add Mobile No.'"></span>
-                                                </button>
-                                            </template>
-                                            <template x-if="returnToDepositAfterUpi">
-                                                <button type="button" @click="returnToDepositAfterUpi = false; openTopUpModal(currentUser, topUpAmount || 1000);"
-                                                    class="btn-outline text-xs cursor-pointer">
-                                                    Return to Deposit →
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Mobile Payment & App Transfer (Desktop Only - Strictly Hidden on Mobile) -->
-                        <div class="hidden lg:block lg:col-span-5 space-y-4">
-                            <div class="page p-5 sm:p-6 space-y-4 text-center">
-                                <div class="pb-2.5 rule-row text-left">
-                                    <span class="text-[10px] font-num uppercase tracking-widest font-semibold" style="color: var(--ink-soft);">Direct Mobile Transfer</span>
-                                    <h4 class="font-head text-sm font-bold mt-0.5">Pay via Mobile Number</h4>
-                                </div>
-
-                                <template x-if="getPayeePhone()">
-                                    <div class="space-y-3">
-                                        <div class="p-3.5 rounded-lg border border-slate-200 bg-slate-50 text-left space-y-2">
-                                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Payee Mobile (All Apps)</div>
-                                            <div class="flex items-center justify-between gap-2">
-                                                <span class="font-mono text-xl font-bold text-slate-900" x-text="getPayeePhone()"></span>
-                                                <button type="button" @click="copyText(getPayeePhone(), 'Mobile Number')"
-                                                    class="btn-credit text-xs py-1 px-2.5 font-bold shadow-xs cursor-pointer">
-                                                    Copy
-                                                </button>
-                                            </div>
-                                            <div class="text-[11px] text-slate-600">
-                                                Holder: <strong class="capitalize" x-text="data.leader || 'Room Account'"></strong>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-bold text-emerald-800">
-                                                <span>🛡️</span> Zero Bank Security Declines
-                                            </span>
-                                        </div>
-                                        <div class="text-xs font-bold text-slate-800">
-                                            Send ₹1,000 to <span class="capitalize" x-text="data.leader || 'Room Account'"></span>
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 text-left">
-                                            Open Google Pay, PhonePe, or Paytm, select "To Mobile Number", paste the number, and transfer.
-                                        </p>
-                                    </div>
-                                </template>
-
-                                <template x-if="!getPayeePhone()">
-                                    <div class="p-6 border border-dashed rounded text-center" style="border-color: var(--rule-soft); color: var(--ink-faint);">
-                                        <svg class="w-10 h-10 mx-auto text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                        <p class="text-xs font-semibold text-slate-700">Mobile Number Inactive</p>
-                                        <p class="text-[11px] mt-1">Awaiting <span class="capitalize font-semibold" x-text="data.leader"></span> to register payment mobile number.</p>
-                                    </div>
-                                </template>
-
-                                <div class="pt-3 rule-row text-left space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--ink-soft);">Compatible Payment Apps</span>
-                                        <span class="text-[10px] text-slate-400 font-num">Direct UPI</span>
-                                    </div>
-                                    <div class="grid grid-cols-4 gap-2">
-                                        <!-- Google Pay Logo -->
-                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="Google Pay">
-                                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-6 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
-                                            <svg class="hidden h-6 w-auto max-w-full" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M22.7 20.3c0-.7-.1-1.4-.2-2h-8.7v3.8h5c-.2 1.2-.9 2.2-1.9 2.8v2.4h3.1c1.8-1.7 2.7-4.1 2.7-7z" fill="#4285F4"/>
-                                                <path d="M13.8 29.3c2.5 0 4.6-.8 6.2-2.3l-3.1-2.4c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H5.5v2.5c1.6 3.1 4.7 5.1 8.3 5.1z" fill="#34A853"/>
-                                                <path d="M8.7 22.3c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V15.8H5.5c-.7 1.3-1 2.8-1 4.2s.4 2.9 1 4.2l3.2-2.4z" fill="#FBBC04"/>
-                                                <path d="M13.8 14.5c1.4 0 2.6.5 3.6 1.4l2.7-2.7C18.4 11.6 16.3 11 13.8 11c-3.6 0-6.7 2-8.3 5.1l3.2 2.5c.7-2.2 2.7-3.8 5.1-3.8z" fill="#EA4335"/>
-                                                <path d="M35 11h-4.5v18h3.3v-5.5H35c3.5 0 6.3-2.8 6.3-6.2 0-3.5-2.8-6.3-6.3-6.3zm0 9.2h-1.2v-6h1.2c1.7 0 3 1.3 3 3s-1.3 3-3 3z" fill="#5F6368"/>
-                                                <path d="M48.2 16.5c-2.3 0-4.2 1.7-4.2 4.1 0 2.5 1.9 4.2 4.2 4.2 1 0 1.9-.4 2.6-1.1v1h3.1V17h-3.1v1.1c-.7-.9-1.6-1.6-2.6-1.6zm.5 6.3c-1.3 0-2.3-1-2.3-2.2 0-1.2 1-2.2 2.3-2.2 1.2 0 2.2 1 2.2 2.2 0 1.2-1 2.2-2.2 2.2z" fill="#5F6368"/>
-                                                <path d="M62.6 17l-3.7 9.5h-3.4l1.4-3.1-2.4-6.4h3.5l1.2 3.6 1.2-3.6h2.2z" fill="#5F6368"/>
-                                            </svg>
-                                        </div>
-                                        <!-- PhonePe Logo -->
-                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="PhonePe">
-                                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-8 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
-                                            <svg class="hidden h-7 w-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect width="48" height="48" rx="10" fill="#5F259F"/>
-                                                <path d="M13 13.5h22v3.2H13z" fill="#FFFFFF"/>
-                                                <path d="M22 13.5l4.2-6.5h3.6l-5 6.5z" fill="#FFFFFF"/>
-                                                <path d="M29 13.5v19h-3.8v-5.2c-1.3 1.8-3.4 2.7-5.8 2.7-4.2 0-7.4-3.2-7.4-7.5v-9h3.8v8.6c0 2.3 1.7 4 4 4 2.3 0 4-1.7 4-4v-8.6H29z" fill="#FFFFFF"/>
-                                                <path d="M22.5 29.5l4.8 6.5h-4.8l-3.2-4.5z" fill="#FFFFFF"/>
-                                            </svg>
-                                        </div>
-                                        <!-- Paytm Logo -->
-                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="Paytm">
-                                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
-                                            <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 105 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 6H5v22h4.5v-6.8h2.5c4.6 0 8-3.2 8-7.6S16.6 6 12 6zm0 10.8H9.5v-6.4H12c2.3 0 3.8 1.4 3.8 3.2s-1.5 3.2-3.8 3.2z" fill="#002970"/>
-                                                <path d="M28 13.8c-3.6 0-6.2 2.7-6.2 6.5s2.6 6.5 6.2 6.5c2.1 0 3.7-.8 4.7-2.1v1.8h4.2V14.2h-4.2v1.7c-1-1.3-2.6-2.1-4.7-2.1zm.8 9.5c-1.8 0-3.1-1.3-3.1-3s1.3-3 3.1-3 3.1 1.3 3.1 3-1.3 3-3.1 3z" fill="#002970"/>
-                                                <path d="M47.3 14.2l-4.5 13.5h-4.6l1.8-4.5-4-9h4.8l2.2 5.5 2.1-5.5h2.2z" fill="#002970"/>
-                                                <path d="M57.5 9.5h-4V6H49v3.5h-3v4h3v9.5c0 3.5 2 5 5.5 5h3V24h-2c-1.2 0-2-.5-2-2v-8.5h4v-4z" fill="#00BAF2"/>
-                                                <path d="M83.5 13.8c-2 0-3.6.9-4.5 2.3-.8-1.4-2.4-2.3-4.3-2.3-1.8 0-3.2.8-4 2v-1.6h-4.2V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-7.8c0-1.8 1.2-2.9 2.7-2.9s2.6 1.1 2.6 2.9V28h4.2v-8.6c0-3.5-2.2-5.6-5.5-5.6z" fill="#00BAF2"/>
-                                            </svg>
-                                        </div>
-                                        <!-- BHIM / UPI Logo -->
-                                        <div class="h-12 rounded-lg border bg-white flex items-center justify-center p-2 shadow-2xs hover:shadow-xs hover:border-indigo-300 transition-all" style="border-color: #e2e8f0;" title="BHIM UPI & Banks">
-                                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-5 w-auto max-w-full object-contain" onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
-                                            <svg class="hidden h-5 w-auto max-w-full" viewBox="0 0 100 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 7h8l14 20h-8z" fill="#097939"/>
-                                                <path d="M26 7h8l-14 20h-8z" fill="#ED752E"/>
-                                                <path d="M48 8h5v11.5c0 3.2-2 5.5-5.5 5.5s-5.5-2.3-5.5-5.5V8h5v11.5c0 1 .5 1.7 1.5 1.7s1.5-.7 1.5-1.7V8z" fill="#1C3F60"/>
-                                                <path d="M60 8h6.5c3.5 0 6 2.3 6 5.5s-2.5 5.5-6 5.5H64v6H60V8zm4 7.2h2.2c1.2 0 2.2-.7 2.2-1.7s-1-1.7-2.2-1.7H64v3.4z" fill="#1C3F60"/>
-                                                <path d="M78 8h5v17h-5V8z" fill="#1C3F60"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Dedicated 12-Month Rotation Schedule Tab (Authentic Calendar UI) -->
                 <div x-show="currentTab === 'schedule'" class="space-y-3.5">
                     <div class="page p-4 sm:p-5 space-y-4 shadow-sm" style="background: var(--paper-raised); border: 1px solid var(--rule); border-left: 4px solid var(--spine);">
@@ -2355,11 +1946,6 @@
                                             </svg>
                                             Admin Governed
                                         </span>
-                                        <button type="button" @click="goToUpiTab(false)"
-                                            class="btn-ink text-xs py-1 px-2.5 font-semibold flex items-center gap-1 shadow-xs cursor-pointer shrink-0 whitespace-nowrap"
-                                            style="background: var(--credit); color: #ffffff;">
-                                            <span>UPI Payee →</span>
-                                        </button>
                                     </div>
                                 </template>
                             </div>
@@ -2854,15 +2440,6 @@
                                 required>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold uppercase tracking-wide mb-1"
-                                style="color: var(--ink-soft);">Room Account UPI ID (for instant payments)</label>
-                            <input type="text" x-model="newUpiId" placeholder="e.g. 9876543210@upi or roomholder@okaxis"
-                                class="field font-num text-xs">
-                            <p class="text-[10px] mt-1" style="color: var(--ink-faint);">
-                                When set, roommates see one-tap UPI pay buttons and QR codes to deposit directly into this account.
-                            </p>
-                        </div>
-                        <div>
                             <div class="mb-1">
                                 <label class="block text-[10px] font-semibold uppercase tracking-wide"
                                     style="color: var(--ink-soft);">Active Roommates</label>
@@ -3015,8 +2592,7 @@
                                 style="color: var(--ink-soft);">Deposit amount</label>
                             <input type="number" step="1" min="1" x-model="topUpAmount"
                                 placeholder="e.g. 500, 1000, 1500…" class="field font-num font-semibold" required>
-                            <p class="text-[10px] mt-1" style="color: var(--ink-faint);">Enter whatever cash or UPI the
-                                roommate handed over.</p>
+                            <p class="text-[10px] mt-1" style="color: var(--ink-faint);">Record cash or direct bank transfer handed over or sent by the roommate.</p>
                         </div>
 
                         <div>
@@ -3024,203 +2600,6 @@
                                 style="color: var(--ink-soft);">Note (optional)</label>
                             <input type="text" x-model="topUpNote" placeholder="e.g. Advance for groceries"
                                 class="field text-xs">
-                        </div>
-
-                        <!-- Mobile Number Payment Block (PhonePe, Google Pay, Paytm) -->
-                        <div class="p-3.5 rounded-[3px] border space-y-3"
-                            style="background: var(--paper-raised); border-color: var(--rule-soft);">
-                            
-                            <!-- Header -->
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
-                                    style="color: var(--credit);">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                    Pay via Mobile Number
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    <template x-if="getPayeePhone()">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-[10px] font-num font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                <span x-text="getPayeePhone()"></span>
-                                            </span>
-                                            <template x-if="currentUser.toLowerCase() === (data.leader || '').toLowerCase() || isAdmin">
-                                                <button type="button" @click="openUserUpiModal()"
-                                                    class="text-[10px] font-semibold underline text-slate-600 hover:text-slate-900 cursor-pointer">
-                                                    Edit
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template x-if="!getPayeePhone()">
-                                        <span class="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
-                                            Pending <span class="capitalize font-bold" x-text="data.leader"></span>'s Mobile
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <template x-if="getPayeePhone()">
-                                <div class="space-y-3">
-                                    <!-- 1. ACCOUNT HOLDER NOTICE (When Current User is Month Leader) -->
-                                    <div x-show="currentUser && data.leader && currentUser.toLowerCase() === data.leader.toLowerCase()"
-                                        class="p-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-950 space-y-2 shadow-xs">
-                                        <div class="flex items-center gap-1.5 font-bold text-xs text-emerald-900">
-                                            <span class="text-sm">⚡</span>
-                                            <span>Account Holder (<span class="capitalize" x-text="currentUser"></span>) — Direct Record</span>
-                                        </div>
-                                        <p class="text-[11px] leading-relaxed text-emerald-800">
-                                            You are holding the room account for <strong x-text="data.month"></strong>. You already have the room funds. Click below to record your share into the passbook ledger directly:
-                                        </p>
-                                        <button type="button" @click="submitTopUp()"
-                                            class="w-full py-2 px-3 rounded font-bold text-xs text-white bg-emerald-700 hover:bg-emerald-800 active:scale-98 shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <span>✓ Record My ₹<span class="font-num" x-text="Number(topUpAmount || 1000).toLocaleString()"></span> Deposit into Ledger</span>
-                                        </button>
-                                    </div>
-
-                                    <!-- 2. PAYEE MOBILE NUMBER HIGHLIGHT CARD -->
-                                    <div class="p-3 rounded-lg border border-slate-200 bg-white space-y-2 shadow-xs">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                                Payee Mobile Number (GPay / PhonePe / Paytm)
-                                            </span>
-                                            <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                                                Active <span class="capitalize" x-text="data.month"></span> Holder
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center justify-between gap-2 p-2.5 rounded bg-slate-50 border border-slate-200">
-                                            <div class="flex items-center gap-2.5 min-w-0">
-                                                <div class="avatar shadow-2xs" style="width:30px;height:30px;font-size:12px;"
-                                                    :style="'background-color:' + getMemberColor(data.leader || 'm')"
-                                                    x-text="(data.leader || 'M').charAt(0).toUpperCase()"></div>
-                                                <div>
-                                                    <div class="font-mono text-base sm:text-lg font-bold text-slate-900 tracking-wider leading-none"
-                                                        x-text="getPayeePhone()"></div>
-                                                    <div class="text-[10.5px] text-slate-500 font-semibold mt-1">
-                                                        <span class="capitalize text-slate-800 font-bold" x-text="data.leader"></span>'s Registered Mobile
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button" @click="copyText(getPayeePhone(), 'Mobile Number')"
-                                                class="btn-credit text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold shadow-xs cursor-pointer shrink-0">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                                <span>Copy Number</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. INSTANT PAYMENT APP TILES (Auto-copies number & opens app) -->
-                                    <div class="p-3.5 rounded-lg border bg-white space-y-3 shadow-xs" style="border-color: var(--rule-soft);">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                <span>Open App & Pay ₹<span class="font-num font-bold text-emerald-700" x-text="Number(topUpAmount || 0).toLocaleString()"></span>:</span>
-                                            </span>
-                                            <span class="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold flex items-center gap-1">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                1-Tap Open
-                                            </span>
-                                        </div>
-
-                                        <!-- 4 Brand Tiles Grid -->
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                            <!-- Google Pay Button -->
-                                            <button type="button" @click="launchPhonePayment('gpay')"
-                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-indigo-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
-                                                title="Open Google Pay" aria-label="Google Pay">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" class="h-6 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
-                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">Google Pay</span>
-                                            </button>
-
-                                            <!-- PhonePe Button -->
-                                            <button type="button" @click="launchPhonePayment('phonepe')"
-                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-purple-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
-                                                title="Open PhonePe" aria-label="PhonePe">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" class="h-6 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
-                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">PhonePe</span>
-                                            </button>
-
-                                            <!-- Paytm Button -->
-                                            <button type="button" @click="launchPhonePayment('paytm')"
-                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-sky-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
-                                                title="Open Paytm" aria-label="Paytm">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" class="h-5 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
-                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">Paytm</span>
-                                            </button>
-
-                                            <!-- BHIM / Any UPI App Button -->
-                                            <button type="button" @click="launchPhonePayment('bhim')"
-                                                class="h-16 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-emerald-400 active:scale-95 flex flex-col items-center justify-center gap-1 p-2 transition-all shadow-xs cursor-pointer group"
-                                                title="Open BHIM or Any App" aria-label="BHIM UPI">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="BHIM UPI" class="h-5 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" />
-                                                <span class="text-[10px] font-semibold text-slate-600 group-hover:text-slate-900">BHIM / Any App</span>
-                                            </button>
-                                        </div>
-
-                                        <p class="text-[11px] text-slate-500 text-center">
-                                            Tap any app above — it copies <strong class="font-mono text-slate-800" x-text="getPayeePhone()"></strong> and opens the app. Select "To Mobile Number" to pay.
-                                        </p>
-                                    </div>
-
-                                    <!-- Feedback Banner -->
-                                    <div x-show="upiRedirected" x-cloak class="p-2.5 rounded bg-emerald-50 border border-emerald-300 text-[11px] text-emerald-900 flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <div>
-                                            <span class="font-bold">Mobile number copied & app opened!</span> In your app, select 'To Mobile Number', paste <strong class="font-mono" x-text="getPayeePhone()"></strong>, and pay. Then click <strong>"Confirm deposit"</strong> below to record it in the ledger.
-                                        </div>
-                                    </div>
-
-                                    <!-- Payee Verification & Copy Button -->
-                                    <div class="flex items-center justify-between pt-1 border-t text-[10.5px]" style="border-color: var(--rule-soft); color: var(--ink-faint);">
-                                        <span>Payee: <strong class="capitalize" x-text="data.leader || 'Room Account'"></strong> · Mobile: <strong class="font-mono" x-text="getPayeePhone()"></strong></span>
-                                        <button type="button" @click="copyText(getPayeePhone(), 'Mobile Number')"
-                                            class="font-semibold text-emerald-800 hover:text-emerald-900 underline flex items-center gap-1 cursor-pointer">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            Copy Number
-                                        </button>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <template x-if="!getPayeePhone()">
-                                <div class="p-3 rounded border bg-amber-50/70 border-amber-200 text-xs space-y-2">
-                                    <div class="flex items-center gap-1.5 text-amber-900 font-semibold">
-                                        <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <span>Payment Mobile Number Not Registered</span>
-                                    </div>
-                                    <template x-if="currentUser.toLowerCase() === (data.leader || '').toLowerCase() || isAdmin">
-                                        <div>
-                                            <p class="text-[11px] text-amber-800 leading-relaxed">
-                                                You are the designated account holder for <strong x-text="data.month"></strong>. Add your 10-digit mobile number so roommates can pay deposits to you via Google Pay, PhonePe, or Paytm.
-                                            </p>
-                                            <button type="button" @click="openUserUpiModal()"
-                                                class="btn-credit text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm font-semibold cursor-pointer w-full justify-center mt-2">
-                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                </svg>
-                                                <span>Add My Payment Mobile Number →</span>
-                                            </button>
-                                        </div>
-                                    </template>
-                                    <template x-if="currentUser.toLowerCase() !== (data.leader || '').toLowerCase() && !isAdmin">
-                                        <p class="text-[11px] text-amber-800 leading-relaxed">
-                                            Account holder (<strong class="capitalize" x-text="data.leader"></strong>) has not yet registered their payment mobile number for <strong x-text="data.month"></strong>.
-                                        </p>
-                                    </template>
-                                </div>
-                            </template>
                         </div>
 
                         <div class="pt-3 flex items-center justify-end gap-2 rule-row">
@@ -3383,117 +2762,6 @@
             </div>
         </div>
 
-        <!-- Personal Duty Payment Mobile Number Setup Modal -->
-        <div x-show="showUserUpiModal" x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 no-print"
-            style="background: rgba(18, 22, 25, 0.75); backdrop-filter: blur(4px);">
-            <div @click.outside="if (!userUpiSaving) showUserUpiModal = false"
-                class="page w-full max-w-md p-5 sm:p-6 shadow-2xl relative border rounded-[4px] space-y-4"
-                style="background: var(--paper-raised); border-color: var(--rule);">
-                
-                <!-- Header -->
-                <div class="flex items-start justify-between gap-3 pb-3 border-b" style="border-color: var(--rule-soft);">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-[4px] flex items-center justify-center text-emerald-900 bg-emerald-100 border border-emerald-300 shrink-0">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded border border-emerald-200">
-                                Account Holder Duty Setup
-                            </span>
-                            <h3 class="font-head text-lg font-bold text-slate-900 mt-0.5">
-                                Set Payment Mobile Number
-                            </h3>
-                        </div>
-                    </div>
-                    <button type="button" @click="showUserUpiModal = false; userUpiModalDismissed = true;"
-                        class="text-slate-400 hover:text-slate-600 p-1 rounded transition cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Explanation -->
-                <div class="p-3.5 rounded-[3px] text-xs space-y-2 border"
-                    style="background: rgba(31,111,84,0.06); border-color: rgba(31,111,84,0.25); color: #164e3b;">
-                    <div class="font-bold flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                        <span>Payment Mobile for <strong class="capitalize" x-text="currentUser"></strong></span>
-                    </div>
-                    <p class="text-[11.5px] leading-relaxed text-slate-700">
-                        Enter your <strong>10-digit mobile number</strong> registered with PhonePe, Google Pay, or Paytm. When it is your monthly turn as <strong>Room Account Holder</strong>, roommates will send deposits directly to this mobile number without bank declines.
-                    </p>
-                    <div class="text-[10px] text-slate-500 pt-1.5 flex items-center gap-1.5 border-t border-emerald-200/60">
-                        <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        <span>Direct Mobile Transfer: Eliminates unverified VPA errors and security decline blocks.</span>
-                    </div>
-                </div>
-
-                <!-- Error message if any -->
-                <div x-show="userUpiError" x-cloak class="p-2.5 rounded-[3px] text-xs flex items-center gap-2 border bg-rose-50 border-rose-200 text-rose-800">
-                    <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span x-text="userUpiError" class="font-medium"></span>
-                </div>
-
-                <!-- Mobile Number Input Form -->
-                <form @submit.prevent="submitSaveUserUpi()" class="space-y-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold uppercase tracking-wide text-slate-700 mb-1">
-                            Registered 10-Digit Mobile Number
-                        </label>
-                        <div class="relative">
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 font-mono">
-                                +91
-                            </div>
-                            <input type="tel" x-model="userUpiInput" required
-                                maxlength="10"
-                                placeholder="e.g. 7732087737"
-                                class="field font-num text-sm font-bold pl-12 pr-8 tracking-wider"
-                                style="background: #ffffff;" />
-                            <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <p class="text-[10px] mt-1 text-slate-500">
-                            Registered on Google Pay, PhonePe, Paytm & BHIM.
-                        </p>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="pt-3 border-t flex items-center justify-between gap-2" style="border-color: var(--rule-soft);">
-                        <button type="button" @click="showUserUpiModal = false; userUpiModalDismissed = true;"
-                            class="btn-outline text-xs cursor-pointer">
-                            Remind Me Later
-                        </button>
-                        <button type="submit" :disabled="userUpiSaving"
-                            class="btn-ink text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
-                            <template x-if="userUpiSaving">
-                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                </svg>
-                            </template>
-                            <template x-if="!userUpiSaving">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </template>
-                            <span x-text="userUpiSaving ? 'Saving...' : 'Save Mobile Number'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
     <script>
         // Automatic Authorization & Cookie Session Interceptor
         const _origFetch = window.fetch;
@@ -3533,13 +2801,6 @@
                 changePasswordError: '',
                 changePasswordMsg: '',
                 changePasswordLoading: false,
-
-                showUserUpiModal: false,
-                myPersonalUpiId: '',
-                userUpiInput: '',
-                userUpiModalDismissed: false,
-                userUpiSaving: false,
-                userUpiError: '',
 
                 mobileSidebarOpen: false,
 
@@ -3595,15 +2856,6 @@
                 newAutoCalendar: true,
                 newLeader: '',
                 newBaseAmount: 1000,
-                newUpiId: '',
-                tabUpiId: '',
-                tabHolder: '',
-                tabHolderDropdownOpen: false,
-                returnToDepositAfterUpi: false,
-                upiRedirected: false,
-                upiMode: 'laptop',
-                chosenUpiApp: 'all',
-                depositPayMethod: 'qr',
                 newMembers: '',
 
                 calendarMonths: [
@@ -3679,9 +2931,6 @@
                     }
                     this.topUpAmount = presetAmount || (this.data.base_amount || 1000);
                     this.topUpNote = '';
-                    this.depositPayMethod = 'qr';
-                    this.upiRedirected = false;
-                    this.upiMode = this.isMobileDevice() ? 'mobile' : 'laptop';
                     this.topUpDropdownOpen = false;
                     this.showTopUpModal = true;
                 },
@@ -3804,12 +3053,6 @@
                                 this.authenticated = true;
                                 this.currentUser = json.username;
                                 this.isAdmin = Boolean(json.is_admin || (json.username && json.username.toLowerCase() === 'admin'));
-                                this.myPersonalUpiId = json.user_upi || '';
-                                if (!this.isAdmin && !this.myPersonalUpiId && !this.userUpiModalDismissed) {
-                                    this.userUpiInput = '';
-                                    this.userUpiError = '';
-                                    this.showUserUpiModal = true;
-                                }
                                 await this.fetchData();
                                 const available = this.availableReportDates();
                                 if (available.length) this.selectedReportDate = available[0];
@@ -3859,12 +3102,6 @@
                             this.currentUser = json.username;
                             this.isAdmin = Boolean(json.username && json.username.toLowerCase() === 'admin');
                             this.loginPassword = '';
-                            this.myPersonalUpiId = json.user_upi || '';
-                            if (!this.isAdmin && !this.myPersonalUpiId && !this.userUpiModalDismissed) {
-                                this.userUpiInput = '';
-                                this.userUpiError = '';
-                                this.showUserUpiModal = true;
-                            }
                             this.showToast(`Verified: Logged in as ${json.username}`);
                             await this.fetchData();
                             const available = this.availableReportDates();
@@ -3957,7 +3194,6 @@
                         case 'pool': return 'Room account';
                         case 'expenses': return 'All entries';
                         case 'reports': return 'Statement';
-                        case 'upi': return 'UPI & Payments';
                         case 'schedule': return 'Holder schedule';
                         default: return 'Overview';
                     }
@@ -4016,9 +3252,6 @@
                             const json = await res.json();
                             this.data = json;
                             this.summary = json.summary || {};
-                            if (this.currentUser && json.user_upis && json.user_upis[this.currentUser.toLowerCase()]) {
-                                this.myPersonalUpiId = json.user_upis[this.currentUser.toLowerCase()];
-                            }
                             if (this.selectedSplit.length === 0 && this.data.members) {
                                 this.selectedSplit = [...this.data.members];
                             }
@@ -4234,7 +3467,6 @@
                     this.newAutoCalendar = this.data.auto_calendar !== undefined ? Boolean(this.data.auto_calendar) : true;
                     this.newLeader = this.data.leader || (this.data.members && this.data.members[0]) || '';
                     this.newBaseAmount = this.data.base_amount || 1000;
-                    this.newUpiId = this.data.upi_id || '';
                     this.newMembers = (this.data.members || []).join(', ');
                     this.leaderDropdownOpen = false;
                     this.showSetupModal = true;
@@ -4242,15 +3474,6 @@
 
                 async submitSetup() {
                     const memberList = (this.data.members && this.data.members.length) ? this.data.members : ['yashwanth', 'madhu', 'siva', 'satya', 'manohar'];
-                    // Client-side Security Validation for UPI ID
-                    if (this.newUpiId && this.newUpiId.trim()) {
-                        const upiVal = this.newUpiId.trim().toLowerCase();
-                        const upiPattern = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/;
-                        if (!upiPattern.test(upiVal)) {
-                            alert('Invalid UPI ID format. Please enter a valid handle like 9876543210@upi or name@okaxis.');
-                            return;
-                        }
-                    }
                     try {
                         const res = await fetch('/api/admin/update_config', {
                             method: 'POST',
@@ -4260,7 +3483,7 @@
                                 leader: (this.newLeader || memberList[0]).toLowerCase(),
                                 base_amount: parseFloat(this.newBaseAmount) || 1000,
                                 auto_calendar: Boolean(this.newAutoCalendar),
-                                upi_id: (this.newUpiId || '').trim().toLowerCase()
+                                upi_id: ''
                             })
                         });
                         if (res.ok) {
@@ -4286,174 +3509,7 @@
                     return window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 },
 
-                getStaticUpiLink() {
-                    const upi = (this.data?.upi_id || '').trim().toLowerCase();
-                    if (!upi) return '#';
-                    const rawLeader = this.data?.leader || 'Roommate';
-                    const payeeName = (rawLeader.charAt(0).toUpperCase() + rawLeader.slice(1)).replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    // NPCI Standard Static P2P URI:
-                    // Dynamic amounts (&am=) on personal P2P VPAs trigger bank RMS blocks ("Payment declined for security reasons").
-                    // A pure static URI has NO am= and NO tn=, guaranteeing 100% acceptance across PhonePe, Google Pay, and Paytm.
-                    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&cu=INR`;
-                },
 
-                getPayeePhone() {
-                    const upi = (this.data?.upi_id || '').trim();
-                    if (!upi) return '';
-                    const match = upi.match(/^(\d{10})/);
-                    if (match) return match[1];
-                    const numMatch = upi.replace(/\D/g, '');
-                    if (numMatch.length === 10) return numMatch;
-                    if (numMatch.length === 12 && numMatch.startsWith('91')) return numMatch.slice(2);
-                    return upi;
-                },
-
-                getCleanPhone(val) {
-                    if (!val) return '';
-                    const str = String(val).trim();
-                    const match = str.match(/^(\d{10})/);
-                    if (match) return match[1];
-                    const numMatch = str.replace(/\D/g, '');
-                    if (numMatch.length === 10) return numMatch;
-                    if (numMatch.length === 12 && numMatch.startsWith('91')) return numMatch.slice(2);
-                    return str;
-                },
-
-                getPrimaryUpiId() {
-                    const upi = (this.data?.upi_id || '').trim();
-                    if (!upi) return '';
-                    return upi.replace(/-\d+@/, '@');
-                },
-
-                copyText(val, label = 'Copied') {
-                    if (!val) return;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(val).then(() => {
-                            this.showToast(`✓ ${label} copied: ${val}`);
-                        }).catch(() => {
-                            this.fallbackCopy(val);
-                        });
-                    } else {
-                        this.fallbackCopy(val);
-                    }
-                },
-
-                launchPhonePayment(appName = 'all') {
-                    const amt = parseFloat(this.topUpAmount);
-                    if (!amt || amt <= 0) {
-                        this.showToast('Please enter a deposit amount first');
-                        return;
-                    }
-                    if (amt > 100000) {
-                        alert('Deposit amount cannot exceed ₹1,00,000 per standard limits.');
-                        return;
-                    }
-                    const phone = this.getPayeePhone();
-                    if (!phone) {
-                        alert('Room Account payment mobile number is not registered yet.');
-                        return;
-                    }
-
-                    // Auto-copy mobile number immediately so user can paste if needed
-                    this.copyText(phone, 'Mobile Number');
-
-                    const cleanAmt = Math.min(100000, Math.max(0.01, amt)).toFixed(2);
-                    const rawLeader = this.data?.leader || 'Roommate';
-                    const payeeName = (rawLeader.charAt(0).toUpperCase() + rawLeader.slice(1))
-                        .replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    const tn = 'RoomDeposit';
-
-                    // Standard NPCI Numeric UPI Mapper URI (phone@upi resolves directly on all Indian banking apps)
-                    const npciUpiUrl = `upi://pay?pa=${phone}@upi&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}`;
-
-                    const ua = navigator.userAgent || '';
-                    const isAndroid = /Android/i.test(ua);
-                    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-
-                    let targetUrl = npciUpiUrl;
-
-                    if (isAndroid) {
-                        let pkg = '';
-                        if (appName === 'gpay') pkg = 'com.google.android.apps.nbu.paisa.user';
-                        else if (appName === 'phonepe') pkg = 'com.phonepe.app';
-                        else if (appName === 'paytm') pkg = 'net.one97.paytm';
-                        else if (appName === 'bhim') pkg = 'in.org.npci.upiapp';
-
-                        if (pkg) {
-                            targetUrl = `intent://pay?pa=${phone}@upi&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}#Intent;scheme=upi;package=${pkg};end`;
-                        }
-                    } else if (isIOS) {
-                        if (appName === 'phonepe') targetUrl = `phonepe://pay?pa=${phone}@upi&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}`;
-                        else if (appName === 'paytm') targetUrl = `paytmmp://pay?pa=${phone}@upi&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}`;
-                        else if (appName === 'gpay') targetUrl = `gpay://upi/pay?pa=${phone}@upi&pn=${encodeURIComponent(payeeName)}&am=${cleanAmt}&cu=INR&tn=${encodeURIComponent(tn)}`;
-                    }
-
-                    this.chosenUpiApp = appName;
-                    this.upiRedirected = true;
-
-                    let appLabel = 'Payment App';
-                    if (appName === 'gpay') appLabel = 'Google Pay';
-                    else if (appName === 'phonepe') appLabel = 'PhonePe';
-                    else if (appName === 'paytm') appLabel = 'Paytm';
-                    else if (appName === 'bhim') appLabel = 'BHIM / Any UPI App';
-
-                    this.showToast(`✓ Mobile ${phone} copied! Opening ${appLabel}...`);
-
-                    try {
-                        const linkEl = document.createElement('a');
-                        linkEl.href = targetUrl;
-                        linkEl.rel = 'noopener noreferrer';
-                        document.body.appendChild(linkEl);
-                        linkEl.click();
-                        document.body.removeChild(linkEl);
-                    } catch (e) {
-                        window.location.href = targetUrl;
-                    }
-
-                    if (isAndroid && targetUrl.startsWith('intent://')) {
-                        setTimeout(() => {
-                            if (document.hasFocus()) {
-                                window.location.href = npciUpiUrl;
-                            }
-                        }, 1200);
-                    }
-                },
-
-                getUpiPayLink(amt, member, note) {
-                    const upi = (this.data?.upi_id || '').trim().toLowerCase();
-                    if (!upi) return '#';
-                    const numAmt = parseFloat(amt) || 0;
-                    const cleanAmt = Math.min(100000, Math.max(0.01, numAmt)).toFixed(2);
-                    const rawLeader = this.data?.leader || 'Roommate';
-                    const payeeName = (rawLeader.charAt(0).toUpperCase() + rawLeader.slice(1)).replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=RoomDeposit`;
-                },
-
-                getUpiQrCodeUrl(amt, member, note) {
-                    const link = this.getUpiPayLink(amt, member, note);
-                    return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
-                },
-
-                launchUpiApp(appName = 'all') {
-                    this.launchPhonePayment(appName);
-                },
-
-                launchUpiPayment() {
-                    this.launchPhonePayment('all');
-                },
-
-                copyUpiId(id) {
-                    if (!id) return;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(id).then(() => {
-                            this.showToast('✓ Copied: ' + id);
-                        }).catch(() => {
-                            this.fallbackCopy(id);
-                        });
-                    } else {
-                        this.fallbackCopy(id);
-                    }
-                },
 
                 fallbackCopy(text) {
                     const el = document.createElement('textarea');
@@ -4467,124 +3523,6 @@
                         prompt('Copy:', text);
                     }
                     document.body.removeChild(el);
-                },
-
-                goToUpiTab(returnToDeposit = false) {
-                    this.returnToDepositAfterUpi = returnToDeposit;
-                    this.tabUpiId = (this.data && this.data.upi_id) ? this.data.upi_id : '';
-                    this.tabHolder = (this.data && this.data.leader) ? this.data.leader : (this.currentUser || '');
-                    this.tabHolderDropdownOpen = false;
-                    this.showTopUpModal = false;
-                    this.mobileSidebarOpen = false;
-                    this.currentTab = 'upi';
-                },
-
-                async submitUpiTabConfig() {
-                    if (!this.isLeaderOrAdmin()) {
-                        alert(`Permission denied: Only the current account holder (${this.data?.leader || 'leader'}) can change the account holder or update room payment credentials.`);
-                        return;
-                    }
-                    const val = (this.tabUpiId || '').trim().toLowerCase();
-                    if (val) {
-                        const isPhone = /^[6-9]\d{9}$/.test(val) || /^\d{10}$/.test(val);
-                        const isUpi = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/.test(val);
-                        if (!isPhone && !isUpi) {
-                            alert('Please enter a valid 10-digit mobile number (e.g. 7732087737) or UPI ID.');
-                            return;
-                        }
-                    }
-                    const chosenHolder = (this.tabHolder || this.data?.leader || this.currentUser || '').trim().toLowerCase();
-
-                    try {
-                        const res = await fetch('/api/update_upi', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ upi_id: val, leader: chosenHolder })
-                        });
-                        const resData = await res.json();
-                        if (res.ok && resData.status === 'success') {
-                            await this.fetchData();
-                            this.showToast('✓ Payment details & Account Holder updated successfully!');
-
-                            if (this.returnToDepositAfterUpi) {
-                                this.returnToDepositAfterUpi = false;
-                                const amt = parseFloat(this.topUpAmount) || this.data.base_amount || 1000;
-                                const member = this.isLeaderOrAdmin() ? this.topUpMember : this.currentUser;
-                                setTimeout(() => {
-                                    this.openTopUpModal(member, amt);
-                                    this.showToast('⚡ Returning to deposit slip ready to pay...');
-                                }, 300);
-                            }
-                        } else {
-                            alert(resData.detail || 'Failed to update payment credentials.');
-                        }
-                    } catch (e) {
-                        alert('Network error while updating payment credentials.');
-                    }
-                },
-
-                openUserUpiModal() {
-                    this.userUpiInput = this.getCleanPhone(this.myPersonalUpiId) || this.myPersonalUpiId || '';
-                    this.userUpiError = '';
-                    this.showUserUpiModal = true;
-                },
-
-                async submitSaveUserUpi() {
-                    let val = (this.userUpiInput || '').trim();
-                    if (!val) {
-                        this.userUpiError = 'Please enter your 10-digit mobile number.';
-                        return;
-                    }
-                    const digits = val.replace(/\D/g, '');
-                    let cleanVal = val.toLowerCase();
-                    if (digits.length === 10) {
-                        cleanVal = digits;
-                    } else if (digits.length === 12 && digits.startsWith('91')) {
-                        cleanVal = digits.slice(2);
-                    }
-
-                    const isPhone = /^[6-9]\d{9}$/.test(cleanVal) || /^\d{10}$/.test(cleanVal);
-                    const isUpi = /^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z0-9]{2,32}$/.test(cleanVal);
-                    if (!isPhone && !isUpi) {
-                        this.userUpiError = 'Please enter a valid 10-digit mobile number (e.g. 7732087737).';
-                        return;
-                    }
-
-                    this.userUpiSaving = true;
-                    this.userUpiError = '';
-                    try {
-                        const res = await fetch('/api/user/upi', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ upi_id: cleanVal })
-                        });
-                        const d = await res.json();
-                        if (res.ok && d.status === 'success') {
-                            this.myPersonalUpiId = d.upi_id;
-                            this.showUserUpiModal = false;
-                            this.showToast(`✓ Payment mobile number saved for ${this.currentUser}!`);
-                            if (this.currentUser && this.data && this.currentUser.toLowerCase() === (this.data.leader || '').toLowerCase()) {
-                                this.tabUpiId = d.upi_id;
-                            }
-                            await this.fetchData();
-                        } else {
-                            this.userUpiError = d.detail || 'Failed to save payment mobile number.';
-                        }
-                    } catch (e) {
-                        this.userUpiError = 'Network error saving payment details.';
-                    } finally {
-                        this.userUpiSaving = false;
-                    }
-                },
-
-                getTabUpiQrCodeUrl(amt = 1000) {
-                    const upi = (this.data?.upi_id || this.tabUpiId || '').trim().toLowerCase();
-                    if (!upi || !upi.includes('@')) return '';
-                    const leader = this.data?.leader || this.tabHolder || 'Roommate';
-                    const payeeName = (leader.charAt(0).toUpperCase() + leader.slice(1)).replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 30) || 'Roommate';
-                    const cleanAmt = (parseFloat(amt) || 1000).toFixed(2);
-                    const link = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(cleanAmt)}&cu=INR&tn=RoomDeposit`;
-                    return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
                 },
 
                 getOrderedScheduleMonths() {
